@@ -1,0 +1,33 @@
+# Nix
+result
+result-*
+.dirlocal
+
+# Local environment
+.env.local
+.env.private
+
+# Private configs
+*.private.nu
+*.private.lua
+
+# Backups
+*.backup
+*.backup.*
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary
+*~
+*.tmp
+.cache/
+
+# Home Manager
+.nix-profile
+.config/nushell/zoxide.nu
