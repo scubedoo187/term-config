@@ -7,16 +7,17 @@
 
 ## 📋 성공 기준 (Definition of Done)
 
-- [ ] WezTerm 실행 시 기본 셸이 **Nushell**로 열린다 (macOS/Linux 모두)
-- [ ] 프롬프트가 **Starship**으로 통일된다 (동일한 UI)
-- [ ] 설정 파일은 모두 `~/.config/` 하위에서 관리된다
-- [ ] 폰트: **JetBrainsMono Nerd Font** 적용되어 아이콘/폭/라인 높이가 동일
-- [ ] 탭바: 1개면 숨김, fancy 탭바 끄기, 장식 최소화
-- [ ] 키바인딩: 기존 WezTerm 기본값 유지 (leader=CTRL+a, pane/nav/split)
-- [ ] Nushell: Starship 프롬프트 정상 작동, 명령 실행/실패 코드 표시 일관성
-- [ ] 선택 유틸(zoxide/fzf): 설치 시 정상 동작, 미설치 시도 오류 없음
-- [ ] **Nix-first 설치**: `flake.nix` + 스크립트로 WezTerm/Nu/Starship 설치 + dotfiles 링크까지 완료
-- [ ] 검증: 새 환경에서 WezTerm→Nu 진입, 프롬프트/폰트/한글/이모지 정상
+- [x] WezTerm 실행 시 기본 셸이 **Nushell**로 열린다 (macOS/Linux 모두)
+- [x] 프롬프트가 **Starship**으로 통일된다 (동일한 UI)
+- [x] 설정 파일은 모두 `~/.config/` 하위에서 관리된다
+- [x] 폰트: **JetBrainsMono Nerd Font** 적용되어 아이콘/폭/라인 높이가 동일
+- [x] 탭바: 1개면 숨김, fancy 탭바 끄기, 장식 최소화
+- [x] 키바인딩: 기존 WezTerm 기본값 유지 (leader=CTRL+a, pane/nav/split)
+- [x] Nushell: Starship 프롬프트 정상 작동, 명령 실행/실패 코드 표시 일관성
+- [x] 선택 유틸(zoxide/fzf): 설치 시 정상 동작, 미설치 시도 오류 없음
+- [x] **Nix-first 설치**: `flake.nix` + 스크립트로 WezTerm/Nu/Starship 설치 + dotfiles 링크까지 완료
+- [x] 검증: 새 환경에서 WezTerm→Nu 진입, 프롬프트/폰트/한글/이모지 정상
+- [x] **세션 영속성**: Mux-Server + Resurrect으로 GUI 크래시/재부팅 후 세션 복구
 
 ---
 
@@ -104,6 +105,100 @@ AGENTS.md               # 프로젝트 계획서
 | `z` | Zoom Pane | 창 줌 토글 |
 | `,` | Rename Tab | 탭 이름 변경 |
 | `.` | Rename Workspace | 워크스페이스 이름 변경 |
+| `d` | Attach Mux | 멀티플렉서 도메인 연결 |
+| `Shift+D` | Detach Mux | 멀티플렉서 도메인 분리 |
+| `m` | Domain Launcher | 도메인 퍼지 검색 |
+| `S` | Save Session | 현재 세션 상태 저장 |
+| `R` | Restore Session | 저장된 세션 복원 (퍼지) |
+| `Alt+d` | Delete Session | 저장된 세션 삭제 (퍼지) |
+
+---
+
+## 🔄 세션 영속성 (Session Persistence)
+
+**목표**: Workspace 종료 없이 영속적 세션 유지  
+**구조**: Mux-Server (실시간) + Resurrect (영구 저장)
+
+### 작동 방식
+
+```
+┌─────────────────────────────────────┐
+│ GUI 시작 시                           │
+│ default_gui_startup_args로            │
+│ mux-server의 "local" 도메인에 연결    │
+└────────────┬────────────────────────┘
+             │
+             ├─ Layer 1: Mux-Server
+             │  - GUI 종료해도 세션 유지
+             │  - 새 GUI로 즉시 재연결
+             │  - launchd로 자동 시작
+             │
+             └─ Layer 2: Resurrect
+                - 15분마다 자동 저장
+                - 시스템 재부팅/크래시 대응
+                - 수동 저장/복원 가능
+```
+
+### 설정
+
+#### 1. Mux-Server 자동 시작 (macOS)
+
+```bash
+# 설치 및 활성화
+~/term-config/scripts/setup-macos.sh
+
+# 검증
+launchctl list | grep wezterm
+ps aux | grep wezterm-mux-server
+```
+
+#### 2. Resurrect 저장 디렉토리
+
+기본값: `~/.local/share/wezterm/resurrect/`
+
+저장된 상태는 JSON 파일로 저장되며, 다음 정보를 포함합니다:
+- Workspace/Window/Tab 레이아웃
+- 각 Pane의 CWD (현재 디렉토리)
+- 쉘 출력 (선택)
+
+### 사용 예시
+
+```bash
+# 자동 동작
+1. WezTerm 실행 → mux-server에 자동 연결
+2. 세션 구성 작업
+3. GUI 종료 → 세션 유지
+4. 새 GUI 실행 → 기존 세션 복구
+
+# 수동 저장 (즉시 백업이 필요할 때)
+Leader + S  # 현재 workspace 상태 저장
+
+# 복원 (저장된 상태 목록에서 선택)
+Leader + R  # 퍼지 파인더로 선택 후 복원
+
+# 정리 (불필요한 저장된 상태 삭제)
+Alt + d     # 퍼지 파인더로 선택 후 삭제
+```
+
+### 트러블슈팅
+
+#### Mux-Server가 시작되지 않음
+```bash
+# 수동으로 시작
+/usr/local/bin/wezterm-mux-server --daemonize
+
+# 로그 확인
+tail -f ~/.local/share/wezterm/mux-server.log
+```
+
+#### 세션이 복원되지 않음
+```bash
+# 저장된 상태 확인
+ls -la ~/.local/share/wezterm/resurrect/
+
+# 수동 복원 시도
+Leader + R로 퍼지 파인더 열어서 선택
+```
 
 ---
 
@@ -181,9 +276,11 @@ ln -sf ~/dotfiles/.config/* ~/.config/
 
 ## 🤝 Next Steps (선택)
 
-- [ ] tmux/zellij 도입: 크로스 플랫폼 세션 유지
+- [ ] 암호화: resurrect 상태 파일 암호화 (age/gpg)
+- [ ] Smart Workspace Switcher: workspace 전환 시 자동 저장/복원
 - [ ] 회사/개인 프로파일 분리 (`env.nu` overlay)
 - [ ] Data Engineer Toolkit (jq/yq 대체, CSV/Parquet 처리)
+- [ ] Linux/Windows 지원 확대 (현재 macOS launchd 기반)
 
 ---
 
