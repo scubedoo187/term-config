@@ -28,6 +28,7 @@ end
 local modules = {
 	"appearance",
 	"mux-domain",
+	"resurrect",
 	"keybindings",
 }
 

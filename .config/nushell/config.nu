@@ -1,3 +1,22 @@
+use std/util "path add"
+
+def --env add_if_exists [p: path] {
+  let x = ($p | path expand)
+  if ($x | path exists) { path add $x }
+}
+
+# common user bins
+add_if_exists ($nu.home-path | path join "bin")
+add_if_exists ($nu.home-path | path join ".local" "bin")
+add_if_exists ($nu.home-path | path join ".cargo" "bin")
+
+# Homebrew (Apple Silicon / Intel 둘 다 커버)
+add_if_exists "/opt/homebrew/bin"
+add_if_exists "/opt/homebrew/sbin"
+add_if_exists "/usr/local/bin"
+add_if_exists "/usr/local/sbin"
+add_if_exists "~/.snowsql/1.3.1/"
+
 # Nushell main configuration
 # Core UX settings and optional utilities
 
