@@ -1,89 +1,24 @@
 # Starship configuration - OS-neutral prompt design
 # Minimal noise, consistent across macOS/Linux
 
+# Increase command timeout for slow commands (pyenv etc)
+command_timeout = 1000
+
 # ============================================================================
-# FORMAT: Define prompt structure
+# FORMAT: Define prompt structure (simplified)
 # ============================================================================
 format = """
-$username\
-$hostname\
-$localip\
-$singularity\
-$kubernetes\
 $directory\
-$vcsh\
 $git_branch\
-$git_commit\
-$git_state\
-$git_metrics\
 $git_status\
-$hg_branch\
-$pijul_channel\
 $docker_context\
-$package\
-$buf\
-$cmake\
-$cobol\
-$daml\
-$dart\
-$deno\
-$dotnet\
-$elixir\
-$elm\
-$erlang\
-$fennel\
-$golang\
-$guix\
-$haskell\
-$haxe\
-$helm\
-$java\
-$julia\
-$kotlin\
-$gradle\
-$lua\
-$nim\
 $nodejs\
-$ocaml\
-$opa\
-$perl\
-$php\
-$pulumi\
-$purescript\
 $python\
-$raku\
-$rlang\
-$red\
-$ruby\
 $rust\
-$scala\
-$solidity\
-$swift\
-$terraform\
-$vlang\
-$vagrant\
-$zig\
-$nix_shell\
-$conda\
-$meson\
-$spack\
-$memory_usage\
-$aws\
-$gcloud\
-$nats\
-$direnv\
-$env_var\
-$crystal\
-$custom\
-$sudo\
+$golang\
 $cmd_duration\
 $line_break\
-$jobs\
-$battery\
-$time\
 $status\
-$container\
-$shell\
 $character"""
 
 # ============================================================================
@@ -123,7 +58,7 @@ truncation_symbol = "…"
 [git_status]
 format = "([$all_status$ahead_behind]($style) )"
 style = "red bold"
-conflicted = "=(?${count} )"
+conflicted = "=${count} "
 ahead = "⇡${count}"
 behind = "⇣${count}"
 diverged = "⇕⇡${ahead_count}⇣${behind_count}"
@@ -133,12 +68,20 @@ modified = "!${count}"
 staged = "+${count}"
 renamed = "»${count}"
 deleted = "✘${count}"
-disabled = false
 
 # ============================================================================
-# LANGUAGE MODULES - Select common languages only
+# DOCKER CONTEXT
 # ============================================================================
+[docker_context]
+symbol = "󰡨 "
+format = "via [$symbol$context]($style) "
+style = "blue bold"
+only_with_files = true
+detect_files = ["docker-compose.yml", "docker-compose.yaml", "Dockerfile"]
 
+# ============================================================================
+# LANGUAGE MODULES
+# ============================================================================
 [nodejs]
 symbol = " "
 format = "via [$symbol($version )]($style)"
@@ -152,39 +95,21 @@ symbol = " "
 format = "via [$symbol($version )]($style)"
 style = "bold yellow"
 detect_extensions = ["py"]
-detect_files = [".python-version", "Pipfile", "__pycache__", "pyproject.toml", "requirements.txt", "setup.py", "tox.ini"]
-detect_folders = []
+detect_files = [".python-version", "Pipfile", "pyproject.toml", "requirements.txt", "setup.py"]
 
 [rust]
 symbol = "🦀 "
 format = "via [$symbol($version )]($style)"
 style = "bold red"
 detect_extensions = ["rs"]
-detect_files = ["Cargo.toml", "Cargo.lock"]
-detect_folders = []
+detect_files = ["Cargo.toml"]
 
 [golang]
 symbol = " "
 format = "via [$symbol($version )]($style)"
 style = "bold cyan"
 detect_extensions = ["go"]
-detect_files = ["go.mod", "go.sum", "go.work", "glide.yaml", "Gopkg.yml", "Gopkg.lock"]
-detect_folders = []
-
-[docker_context]
-symbol = "󰡨 "
-format = "via [$symbol$context]($style) "
-style = "blue bold"
-only_with_files = true
-detect_files = ["docker-compose.yml", "docker-compose.yaml", "Dockerfile"]
-detect_extensions = []
-detect_folders = []
-
-[package]
-symbol = "󰏗 "
-format = "is [$version]($style) "
-style = "208 bold"
-display_private = false
+detect_files = ["go.mod", "go.sum"]
 
 # ============================================================================
 # STATUS (exit code)
@@ -192,10 +117,9 @@ display_private = false
 [status]
 symbol = "✖"
 success_symbol = ""
-format = "[$symbol($common_meaning$signal_name$maybe_int)]($style) "
+format = "[$symbol$common_meaning$signal_name$maybe_int]($style) "
 map_symbol = true
 disabled = false
-pipefail = true
 style = "bold red"
 
 # ============================================================================
@@ -206,226 +130,3 @@ min_time = 500
 format = "took [$duration]($style) "
 style = "yellow bold"
 show_milliseconds = false
-show_notifications = false
-
-# ============================================================================
-# TIME (disabled by default, uncomment to enable)
-# ============================================================================
-[time]
-disabled = true
-format = "at [$time]($style) "
-use_12hr = false
-time_format = "%H:%M:%S"
-style = "dimmed white"
-
-# ============================================================================
-# NUSHELL-SPECIFIC: Shell indicator
-# ============================================================================
-[shell]
-nushell = "ν "
-format = "[$symbol]($style)"
-style = "cyan bold"
-disabled = false
-
-# ============================================================================
-# USERNAME
-# ============================================================================
-[username]
-show_always = false
-format = "[$user]($style)@"
-style_user = "bold yellow"
-style_root = "bold red"
-disabled = false
-
-# ============================================================================
-# HOSTNAME (minimal - only show if SSH)
-# ============================================================================
-[hostname]
-ssh_only = true
-ssh_symbol = "🌐 "
-format = "[$ssh_symbol$hostname]($style) "
-style = "bold dimmed blue"
-disabled = false
-
-# ============================================================================
-# DISABLE UNNECESSARY MODULES FOR OS-NEUTRAL LOOK
-# ============================================================================
-
-# Cloud providers - disable by default
-[aws]
-disabled = true
-
-[gcloud]
-disabled = true
-
-[azure]
-disabled = true
-
-# System info - minimize noise
-[memory_usage]
-disabled = true
-
-[battery]
-disabled = true
-
-[localip]
-disabled = true
-
-[singularity]
-disabled = true
-
-[kubernetes]
-disabled = true
-
-# VCS - keep git only
-[hg_branch]
-disabled = true
-
-[pijul_channel]
-disabled = true
-
-# Keep only essential modules
-# Other language modules can be enabled on-demand by uncommenting above
-[deno]
-disabled = true
-
-[dart]
-disabled = true
-
-[elixir]
-disabled = true
-
-[elm]
-disabled = true
-
-[erlang]
-disabled = true
-
-[fennel]
-disabled = true
-
-[guix]
-disabled = true
-
-[haskell]
-disabled = true
-
-[haxe]
-disabled = true
-
-[helm]
-disabled = true
-
-[java]
-disabled = true
-
-[julia]
-disabled = true
-
-[kotlin]
-disabled = true
-
-[gradle]
-disabled = true
-
-[lua]
-disabled = true
-
-[nim]
-disabled = true
-
-[ocaml]
-disabled = true
-
-[opa]
-disabled = true
-
-[perl]
-disabled = true
-
-[php]
-disabled = true
-
-[pulumi]
-disabled = true
-
-[purescript]
-disabled = true
-
-[raku]
-disabled = true
-
-[rlang]
-disabled = true
-
-[red]
-disabled = true
-
-[scala]
-disabled = true
-
-[solidity]
-disabled = true
-
-[swift]
-disabled = true
-
-[terraform]
-disabled = true
-
-[vlang]
-disabled = true
-
-[vagrant]
-disabled = true
-
-[zig]
-disabled = true
-
-[buf]
-disabled = true
-
-[cmake]
-disabled = true
-
-[cobol]
-disabled = true
-
-[daml]
-disabled = true
-
-[nix_shell]
-disabled = true
-
-[conda]
-disabled = true
-
-[meson]
-disabled = true
-
-[spack]
-disabled = true
-
-[direnv]
-disabled = true
-
-[env_var]
-disabled = true
-
-[crystal]
-disabled = true
-
-[custom]
-disabled = true
-
-[nats]
-disabled = true
-
-[sudo]
-disabled = true
-
-[container]
-disabled = true
-
-[vcsh]
-disabled = true
