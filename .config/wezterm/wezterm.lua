@@ -38,10 +38,18 @@ for _, module_name in ipairs(modules) do
 end
 
 -- Default shell: Nushell (cross-platform)
-config.default_prog = { "nu" }
+-- Try nix-profile path first, then fall back to system nu
+local nix_nu = home .. "/.nix-profile/bin/nu"
+local f = io.open(nix_nu, "r")
+if f then
+	f:close()
+	config.default_prog = { nix_nu }
+else
+	config.default_prog = { "nu" }
+end
 
 -- Hide tab bar when only one tab
-config.hide_tab_bar_when_only_one_tab = true
+config.hide_tab_bar_if_only_one_tab = true
 
 -- Disable fancy tab bar (minimal UI)
 config.use_fancy_tab_bar = false
