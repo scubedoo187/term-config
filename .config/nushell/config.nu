@@ -1,192 +1,132 @@
 # Nushell main configuration
-# Wires Starship prompt, configures core UX, loads optional utilities
-
-# ============================================================================
-# STARSHIP PROMPT INTEGRATION
-# ============================================================================
-
-# Initialize Starship as prompt if available
-if (which starship | is-empty | not) {
-    use std "assert"
-    
-    # Define Starship initialization
-    def --wrapped starship_prompt [] {
-        starship prompt --terminal-width (term size).columns --status $env.LAST_EXIT_CODE
-    }
-    
-    # Set as main prompt
-    $env.PROMPT_COMMAND = {|| starship_prompt }
-    
-    # Disable right prompt and default indicators to avoid duplication
-    $env.PROMPT_COMMAND_RIGHT = ""
-    $env.TRANSIENT_PROMPT_COMMAND = ""
-} else {
-    # Fallback if starship not available
-    $env.PROMPT_COMMAND = {|| 
-        let level = ($env.NESTING_LEVEL? // 0)
-        (">" * ($level + 1) + " ")
-    }
-}
+# Core UX settings and optional utilities
 
 # ============================================================================
 # CORE NUSHELL SETTINGS
 # ============================================================================
 
-# Text editing
-$env.config.edit_mode = "vi"
-$env.config.buffer_editor = "nvim"
-
-# History settings
-$env.config.history = {
-    max_size: 100_000
-    sync_on_enter: true
-    file_format: "sqlite"
-    isolation: false
-}
-
-# Completions
-$env.config.completions = {
-    case_sensitive: false
-    quick: true
-    partial: true
-    algorithm: "fuzzy"
-    sort: "smart"
-    external: {
-        enable: true
-        max_results: 100
-        completer: null
+$env.config = {
+    show_banner: false
+    edit_mode: vi
+    buffer_editor: nvim
+    
+    history: {
+        max_size: 100_000
+        sync_on_enter: true
+        file_format: "sqlite"
+        isolation: false
     }
-}
-
-# Error style
-$env.config.error_style = "fancy"
-
-# Display settings
-$env.config.table = {
-    mode: "basic"
-    index_mode: "always"
-    show_empty: false
-    padding: { left: 1, right: 1 }
-    header_on_separator: false
-    abbreviation_threshold: 60
+    
+    completions: {
+        case_sensitive: false
+        quick: true
+        partial: true
+        algorithm: "fuzzy"
+        sort: "smart"
+        external: {
+            enable: true
+            max_results: 100
+            completer: null
+        }
+    }
+    
+    error_style: "fancy"
+    
+    table: {
+        mode: rounded
+        index_mode: always
+        show_empty: false
+        padding: { left: 1, right: 1 }
+        header_on_separator: false
+    }
+    
+    render_right_prompt_on_last_line: true
 }
 
 # ============================================================================
 # OPTIONAL UTILITIES - ZOXIDE
 # ============================================================================
 
-def load_zoxide [] {
-    if (which zoxide | is-empty | not) {
-        # Initialize zoxide for Nushell
-        zoxide init nushell | save --raw $"($env.XDG_CONFIG_HOME)/nushell/zoxide.nu"
-        source $"($env.XDG_CONFIG_HOME)/nushell/zoxide.nu"
+# Initialize zoxide if available
+let zoxide_path = $"($env.HOME)/.nix-profile/bin/zoxide"
+if ($zoxide_path | path exists) {
+    # zoxide init generates these aliases
+    def-env __zoxide_z [...rest: string] {
+        let path = if ($rest | is-empty) {
+            $env.HOME
+        } else if ($rest | length) == 1 and ($rest.0 == '-') {
+            $env.OLDPWD? | default $env.HOME
+        } else {
+            (^$zoxide_path query --exclude (pwd) -- ...$rest)
+        }
+        cd $path
     }
-}
-
-# Try to load zoxide
-try {
-    load_zoxide
-} catch {
-    # zoxide not available, continue without it
+    
+    def-env __zoxide_zi [...rest: string] {
+        let path = (^$zoxide_path query -i -- ...$rest)
+        cd $path
+    }
+    
+    alias z = __zoxide_z
+    alias zi = __zoxide_zi
+    
+    # Hook to add directories to zoxide database
+    $env.config = ($env.config | merge {
+        hooks: {
+            pre_prompt: [{||
+                ^$"($env.HOME)/.nix-profile/bin/zoxide" add -- (pwd)
+            }]
+        }
+    })
 }
 
 # ============================================================================
 # OPTIONAL UTILITIES - FZF
 # ============================================================================
 
-def load_fzf [] {
-    if (which fzf | is-empty | not) {
-        # Configure FZF for Nushell
-        $env.FZF_DEFAULT_OPTS = "--height 50% --reverse --border"
-        
-        # Optional: fzf history search
-        # Can be wired to a keybinding if needed
-    }
-}
-
-# Try to load fzf configuration
-try {
-    load_fzf
-} catch {
-    # fzf not available, continue without it
+let fzf_path = $"($env.HOME)/.nix-profile/bin/fzf"
+if ($fzf_path | path exists) {
+    $env.FZF_DEFAULT_OPTS = "--height 50% --reverse --border"
 }
 
 # ============================================================================
-# OPTIONAL UTILITIES - MODERN REPLACEMENTS (gated)
+# MODERN CLI ALIASES (only if tools exist)
 # ============================================================================
 
-# Use modern replacements if available, fallback to standard commands
-def _get_command [cmd standard_cmd] {
-    if (which $cmd | is-empty | not) {
-        $cmd
-    } else {
-        $standard_cmd
-    }
+let bat_path = $"($env.HOME)/.nix-profile/bin/bat"
+if ($bat_path | path exists) {
+    alias cat = bat --theme=TwoDark
 }
 
-# Setup command aliases for modern alternatives if available
-# These are optional and don't break if missing
-
-if (which bat | is-empty | not) {
-    alias cat = bat --theme Monokai
-}
-
-if (which eza | is-empty | not) {
-    alias ls = eza --group-directories-first
-    alias ll = eza --long --group-directories-first
-    alias la = eza --all --group-directories-first
-    alias lla = eza --all --long --group-directories-first
-} else {
-    alias ll = ls -la
-    alias la = ls -a
-    alias lla = ls -la
-}
-
-if (which rg | is-empty | not) {
-    # ripgrep available as enhanced grep
-}
-
-if (which fd | is-empty | not) {
-    # fd available as enhanced find
+let eza_path = $"($env.HOME)/.nix-profile/bin/eza"
+if ($eza_path | path exists) {
+    alias ls = eza --group-directories-first --icons
+    alias ll = eza --long --group-directories-first --icons
+    alias la = eza --all --group-directories-first --icons
+    alias lla = eza --all --long --group-directories-first --icons
+    alias tree = eza --tree --icons
 }
 
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
-# Cross-platform mkcd (mkdir + cd)
+# mkcd: create directory and cd into it
 def mkcd [path: string] {
     mkdir $path
     cd $path
 }
 
-# Directory navigation helper
-def .. [] {
-    cd ..
-}
-
-def ... [] {
-    cd ../..
-}
-
-def .... [] {
-    cd ../../..
-}
-
-# ============================================================================
-# KEYBINDINGS
-# ============================================================================
-
-$env.config.keybindings = [
-    # Vi-like behavior (already set by edit_mode = "vi")
-    # Add custom keybindings here if needed
-]
+# Navigation shortcuts
+alias ... = cd ../..
+alias .... = cd ../../..
+alias ..... = cd ../../../..
 
 # ============================================================================
 # LOAD PRIVATE CONFIG (if exists)
 # ============================================================================
 
-let private_config = $"($env.XDG_CONFIG_HOME)/nushell/config.private.nu"
+let private_config = $"($env.HOME)/.config/nushell/config.private.nu"
 if ($private_config | path exists) {
     source $private_config
 }
