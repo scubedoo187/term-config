@@ -31,3 +31,5 @@ result-*
 # Home Manager
 .nix-profile
 .config/nushell/zoxide.nu
+*.sqlite3*
+history.txt
