@@ -67,43 +67,6 @@ $env.config = {
 }
 
 # ============================================================================
-# OPTIONAL UTILITIES - ZOXIDE
-# ============================================================================
-
-# Initialize zoxide if available
-let zoxide_path = $"($env.HOME)/.nix-profile/bin/zoxide"
-if ($zoxide_path | path exists) {
-    # zoxide init generates these aliases
-    def-env __zoxide_z [...rest: string] {
-        let path = if ($rest | is-empty) {
-            $env.HOME
-        } else if ($rest | length) == 1 and ($rest.0 == '-') {
-            $env.OLDPWD? | default $env.HOME
-        } else {
-            (^$zoxide_path query --exclude (pwd) -- ...$rest)
-        }
-        cd $path
-    }
-    
-    def-env __zoxide_zi [...rest: string] {
-        let path = (^$zoxide_path query -i -- ...$rest)
-        cd $path
-    }
-    
-    alias z = __zoxide_z
-    alias zi = __zoxide_zi
-    
-    # Hook to add directories to zoxide database
-    $env.config = ($env.config | merge {
-        hooks: {
-            pre_prompt: [{||
-                ^$"($env.HOME)/.nix-profile/bin/zoxide" add -- (pwd)
-            }]
-        }
-    })
-}
-
-# ============================================================================
 # OPTIONAL UTILITIES - FZF (History search with Ctrl+R)
 # ============================================================================
 
@@ -141,22 +104,35 @@ def fzf-cd [] {
 }
 
 # ============================================================================
+# OPTIONAL UTILITIES - ZOXIDE
+# ============================================================================
+
+# Simple z command using zoxide
+def --env z [...rest: string] {
+    if ($rest | is-empty) {
+        cd $env.HOME
+    } else {
+        let path = (^~/.nix-profile/bin/zoxide query -- ...$rest | str trim)
+        cd $path
+    }
+}
+
+# Interactive zoxide with fzf
+def --env zi [...rest: string] {
+    let path = (^~/.nix-profile/bin/zoxide query -i -- ...$rest | str trim)
+    cd $path
+}
+
+# ============================================================================
 # MODERN CLI ALIASES (only if tools exist)
 # ============================================================================
 
-let bat_path = $"($env.HOME)/.nix-profile/bin/bat"
-if ($bat_path | path exists) {
-    alias cat = bat --theme=TwoDark
-}
-
-let eza_path = $"($env.HOME)/.nix-profile/bin/eza"
-if ($eza_path | path exists) {
-    alias ls = eza --group-directories-first --icons
-    alias ll = eza --long --group-directories-first --icons
-    alias la = eza --all --group-directories-first --icons
-    alias lla = eza --all --long --group-directories-first --icons
-    alias tree = eza --tree --icons
-}
+alias cat = bat --theme=TwoDark
+alias ls = eza --group-directories-first --icons
+alias ll = eza --long --group-directories-first --icons
+alias la = eza --all --group-directories-first --icons
+alias lla = eza --all --long --group-directories-first --icons
+alias tree = eza --tree --icons
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -172,12 +148,3 @@ def mkcd [path: string] {
 alias ... = cd ../..
 alias .... = cd ../../..
 alias ..... = cd ../../../..
-
-# ============================================================================
-# LOAD PRIVATE CONFIG (if exists)
-# ============================================================================
-
-let private_config = $"($env.HOME)/.config/nushell/config.private.nu"
-if ($private_config | path exists) {
-    source $private_config
-}

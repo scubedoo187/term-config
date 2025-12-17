@@ -10,3 +10,6 @@ git status
 lazygit
 git
 git status
+ls
+cd workspace/saturdays
+source
