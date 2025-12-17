@@ -95,8 +95,8 @@ def fzf-files [] {
     }
 }
 
-# FZF-powered directory navigation
-def fzf-cd [] {
+# FZF-powered directory navigation (def --env to persist cd)
+def --env fzf-cd [] {
     let selected = (fd --type d --hidden --exclude .git | fzf --height 40% --reverse --border --prompt "Dirs > ")
     if ($selected | is-not-empty) {
         cd $selected
@@ -107,39 +107,57 @@ def fzf-cd [] {
 # OPTIONAL UTILITIES - ZOXIDE
 # ============================================================================
 
-# Simple z command using zoxide
+# Simple z command using zoxide (use $env.HOME instead of ~)
 def --env z [...rest: string] {
+    let zoxide_bin = $"($env.HOME)/.nix-profile/bin/zoxide"
     if ($rest | is-empty) {
         cd $env.HOME
     } else {
-        let path = (^~/.nix-profile/bin/zoxide query -- ...$rest | str trim)
-        cd $path
+        let path = (do { ^$zoxide_bin query -- ...$rest } | str trim)
+        if ($path | is-not-empty) {
+            cd $path
+        }
     }
 }
 
 # Interactive zoxide with fzf
 def --env zi [...rest: string] {
-    let path = (^~/.nix-profile/bin/zoxide query -i -- ...$rest | str trim)
-    cd $path
+    let zoxide_bin = $"($env.HOME)/.nix-profile/bin/zoxide"
+    let path = (do { ^$zoxide_bin query -i -- ...$rest } | str trim)
+    if ($path | is-not-empty) {
+        cd $path
+    }
 }
 
 # ============================================================================
-# MODERN CLI ALIASES (only if tools exist)
+# MODERN CLI ALIASES (with existence checks)
 # ============================================================================
 
-alias cat = bat --theme=TwoDark
-alias ls = eza --group-directories-first --icons
-alias ll = eza --long --group-directories-first --icons
-alias la = eza --all --group-directories-first --icons
-alias lla = eza --all --long --group-directories-first --icons
-alias tree = eza --tree --icons
+# Only define aliases if tools exist in PATH
+def --env setup-aliases [] {
+    # These will be set up at shell start
+}
+
+# bat alias (check if exists)
+if (which bat | is-not-empty) {
+    alias cat = bat --theme=TwoDark
+}
+
+# eza aliases (check if exists)  
+if (which eza | is-not-empty) {
+    alias ls = eza --group-directories-first --icons
+    alias ll = eza --long --group-directories-first --icons
+    alias la = eza --all --group-directories-first --icons
+    alias lla = eza --all --long --group-directories-first --icons
+    alias tree = eza --tree --icons
+}
 
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
 # mkcd: create directory and cd into it
-def mkcd [path: string] {
+def --env mkcd [path: string] {
     mkdir $path
     cd $path
 }

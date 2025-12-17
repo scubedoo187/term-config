@@ -14,30 +14,28 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        isDarwin = pkgs.stdenv.isDarwin;
-        isLinux = pkgs.stdenv.isLinux;
       in
       {
         # Development environment with all tools
         devShells.default = pkgs.mkShell {
-          buildInputs = [
+          buildInputs = with pkgs; [
             # Core terminal tools
-            pkgs.wezterm
-            pkgs.nushell
-            pkgs.starship
+            wezterm
+            nushell
+            starship
             
             # Essential utilities
-            pkgs.git
-            pkgs.zoxide
-            pkgs.fzf
-            pkgs.ripgrep
-            pkgs.fd
-            pkgs.bat
-            pkgs.eza
+            git
+            zoxide
+            fzf
+            ripgrep
+            fd
+            bat
+            eza
             
             # Optional
-            pkgs.neovim
-            pkgs.tmux
+            neovim
+            tmux
           ];
           
           shellHook = ''
@@ -60,9 +58,6 @@
             bat
             eza
           ];
-          postBuild = ''
-            mkdir -p $out/etc/profile.d
-          '';
         };
       }
     ) // {

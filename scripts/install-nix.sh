@@ -93,28 +93,47 @@ setup_dotfiles() {
     log_info "Creating symlinks..."
     
     # WezTerm config
-    if [ -d "$config_dir/wezterm" ]; then
+    if [ -d "$config_dir/wezterm" ] || [ -L "$config_dir/wezterm" ]; then
         log_warning "Backing up existing ~/.config/wezterm"
         mv "$config_dir/wezterm" "$config_dir/wezterm.backup.$(date +%s)"
     fi
     ln -sf "$script_dir/.config/wezterm" "$config_dir/wezterm"
     log_success "Linked WezTerm config"
     
-    # Nushell config
-    if [ -d "$config_dir/nushell" ]; then
+    # Nushell config - handle both ~/.config/nushell and macOS path
+    if [ -d "$config_dir/nushell" ] || [ -L "$config_dir/nushell" ]; then
         log_warning "Backing up existing ~/.config/nushell"
         mv "$config_dir/nushell" "$config_dir/nushell.backup.$(date +%s)"
     fi
     ln -sf "$script_dir/.config/nushell" "$config_dir/nushell"
-    log_success "Linked Nushell config"
+    log_success "Linked Nushell config to ~/.config/nushell"
+    
+    # macOS: Also link to ~/Library/Application Support/nushell (Nu default on macOS)
+    if [[ "$(detect_os)" == "macos" ]]; then
+        local macos_nu_dir="$HOME/Library/Application Support/nushell"
+        if [ -d "$macos_nu_dir" ] || [ -L "$macos_nu_dir" ]; then
+            log_warning "Backing up existing macOS Nushell config"
+            mv "$macos_nu_dir" "${macos_nu_dir}.backup.$(date +%s)"
+        fi
+        ln -sf "$script_dir/.config/nushell" "$macos_nu_dir"
+        log_success "Linked Nushell config to macOS path"
+    fi
     
     # Starship config
-    if [ -f "$config_dir/starship.toml" ]; then
+    if [ -f "$config_dir/starship.toml" ] || [ -L "$config_dir/starship.toml" ]; then
         log_warning "Backing up existing ~/.config/starship.toml"
         mv "$config_dir/starship.toml" "$config_dir/starship.toml.backup.$(date +%s)"
     fi
     ln -sf "$script_dir/.config/starship.toml" "$config_dir/starship.toml"
     log_success "Linked Starship config"
+    
+    # WezTerm main config (~/.wezterm.lua)
+    if [ -f "$HOME/.wezterm.lua" ] || [ -L "$HOME/.wezterm.lua" ]; then
+        log_warning "Backing up existing ~/.wezterm.lua"
+        mv "$HOME/.wezterm.lua" "$HOME/.wezterm.lua.backup.$(date +%s)"
+    fi
+    ln -sf "$script_dir/.config/wezterm/wezterm.lua" "$HOME/.wezterm.lua"
+    log_success "Linked ~/.wezterm.lua"
 }
 
 # Install packages via Nix

@@ -4,7 +4,9 @@
   # Home Manager configuration for cross-platform terminal setup
   home = {
     username = lib.mkDefault (builtins.getEnv "USER");
-    homeDirectory = if osType == "macos" then "/Users/${builtins.getEnv "USER"}" else "/home/${builtins.getEnv "USER"}";
+    homeDirectory = if osType == "macos" 
+      then "/Users/${builtins.getEnv "USER"}" 
+      else "/home/${builtins.getEnv "USER"}";
     stateVersion = "23.11";
 
     packages = with pkgs; [
@@ -26,23 +28,22 @@
       neovim
       tmux
       
-      # For macOS only: JetBrains Mono Nerd Font
-    ] ++ (if osType == "macos" then [
-      jetbrains-mono
-    ] else []);
+      # Fonts (works on both platforms via nix)
+      (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    ];
 
     # Symlink dotfiles
     file = {
       ".config/wezterm" = {
-        source = ./. + "/.config/wezterm";
+        source = ./.config/wezterm;
         recursive = true;
       };
       ".config/nushell" = {
-        source = ./. + "/.config/nushell";
+        source = ./.config/nushell;
         recursive = true;
       };
       ".config/starship.toml" = {
-        source = ./. + "/.config/starship.toml";
+        source = ./.config/starship.toml;
       };
     };
   };
@@ -60,7 +61,7 @@
     # Starship prompt
     starship = {
       enable = true;
-      settings = builtins.fromTOML (builtins.readFile ./. + "/.config/starship.toml");
+      settings = builtins.fromTOML (builtins.readFile ./.config/starship.toml);
     };
 
     # Zoxide
@@ -78,7 +79,7 @@
     # Git configuration (minimal)
     git = {
       enable = true;
-      config = {
+      extraConfig = {
         core.editor = "nvim";
         init.defaultBranch = "main";
       };
@@ -91,7 +92,7 @@
 
     # Direnv (optional)
     direnv = {
-      enable = false;  # Set to true if you use direnv
+      enable = false;
       nix-direnv.enable = false;
     };
   };
@@ -103,12 +104,8 @@
     "...." = "cd ../../..";
   };
 
-  # Manual font installation note for macOS
-  systemd.user.services = 
-    if osType == "linux" then {} else {};
-
   # Manage session and environment variables
-  sessionVariables = {
+  home.sessionVariables = {
     EDITOR = "nvim";
     VISUAL = "nvim";
     STARSHIP_SHELL = "nu";
@@ -117,9 +114,6 @@
     XDG_CACHE_HOME = "${config.home.homeDirectory}/.cache";
   };
 
-  # macOS-specific settings
-  targets.darwin.search = "google";
-  
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 }
