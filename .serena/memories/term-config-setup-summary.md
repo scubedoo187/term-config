@@ -119,12 +119,53 @@ wezterm
 
 ---
 
-## 트러블슈팅
+## 세션 영속성 (Session Persistence) - 통합 구현
+
+### Phase 1-3 구현 완료
+1. **Mux-Domain** (modules/mux-domain.lua)
+   - Unix domain 설정 (name: "local")
+   - GUI 시작 시 자동 mux 도메인 연결
+   - Workspace rename용 mux-server 소켓 설정
+
+2. **Mux-Server 자동 시작** (launchd)
+   - com.wezterm.mux-server.plist
+   - setup-macos.sh로 설치
+   - 로그인 시 자동 시작
+
+3. **Resurrect.wezterm 통합** (modules/resurrect.lua)
+   - 15분마다 workspace 상태 자동 저장
+   - GUI 시작 시 자동 복원
+   - 키바인딩: Leader+S (저장), Leader+R (복원), Alt+d (삭제)
+   - Toast 알림으로 사용자 피드백
+
+### 키바인딩 최종 정리
+| 키 | 동작 | Phase |
+|----|------|-------|
+| `Leader + d` | Mux 도메인 연결 | 1 |
+| `Leader + Shift + D` | Mux 도메인 분리 | 1 |
+| `Leader + m` | Domain selector (fuzzy) | 1 |
+| `Leader + .` | Workspace rename | 1 |
+| `Leader + S` | 수동 저장 (workspace) | 3 |
+| `Leader + R` | 복원 (fuzzy finder) | 3 |
+| `Alt + d` | 저장된 상태 삭제 | 3 |
+
+### 세션 영속성 계층
+```
+┌─ Layer 1: Mux-Server (실시간)
+│  GUI 종료해도 세션 유지
+│  새 GUI로 즉시 재연결
+│
+└─ Layer 2: Resurrect (영구 저장)
+   시스템 재부팅/mux-server 크래시 대응
+   15분마다 파일로 저장
+```
+
+### 트러블슈팅
 
 ### Workspace rename (Leader + .) 안됨
-→ 소켓 경로 수정: `sock` → `default-org.wezfurlong.wezterm`
-- `sock`: mux 서버용 소켓 (GUI와 연결 안됨)
-- `default-org.wezfurlong.wezterm`: GUI 소켓 심볼릭 링크 (활성 GUI와 연결)
+→ 해결됨: 소켓 경로를 `sock` (mux-server)로 설정
+- 기존 시도: GUI 소켓 사용 → 작동 X
+- 현재: mux-server 소켓 사용 → 정상
 
 
 ### WezTerm이 Nu를 못 찾음
