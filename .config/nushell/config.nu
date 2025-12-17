@@ -41,6 +41,29 @@ $env.config = {
     }
     
     render_right_prompt_on_last_line: true
+    
+    keybindings: [
+        {
+            name: fzf_history
+            modifier: control
+            keycode: char_r
+            mode: [emacs, vi_normal, vi_insert]
+            event: {
+                send: executehostcommand
+                cmd: "fzf-history"
+            }
+        }
+        {
+            name: fzf_files
+            modifier: control
+            keycode: char_t
+            mode: [emacs, vi_normal, vi_insert]
+            event: {
+                send: executehostcommand
+                cmd: "fzf-files"
+            }
+        }
+    ]
 }
 
 # ============================================================================
@@ -81,12 +104,40 @@ if ($zoxide_path | path exists) {
 }
 
 # ============================================================================
-# OPTIONAL UTILITIES - FZF
+# OPTIONAL UTILITIES - FZF (History search with Ctrl+R)
 # ============================================================================
 
-let fzf_path = $"($env.HOME)/.nix-profile/bin/fzf"
-if ($fzf_path | path exists) {
-    $env.FZF_DEFAULT_OPTS = "--height 50% --reverse --border"
+$env.FZF_DEFAULT_OPTS = "--height 50% --reverse --border --color=bg+:#363a4f,bg:#24273a,spinner:#f4dbd6,hl:#ed8796 --color=fg:#cad3f5,header:#ed8796,info:#c6a0f6,pointer:#f4dbd6 --color=marker:#f4dbd6,fg+:#cad3f5,prompt:#c6a0f6,hl+:#ed8796"
+
+# FZF-powered history search
+def fzf-history [] {
+    let selected = (
+        history 
+        | get command 
+        | reverse 
+        | uniq 
+        | str join (char newline) 
+        | fzf --height 40% --reverse --border --prompt "History > "
+    )
+    if ($selected | is-not-empty) {
+        commandline edit --replace $selected
+    }
+}
+
+# FZF-powered file finder
+def fzf-files [] {
+    let selected = (fd --type f --hidden --exclude .git | fzf --height 40% --reverse --border --prompt "Files > ")
+    if ($selected | is-not-empty) {
+        commandline edit --insert $selected
+    }
+}
+
+# FZF-powered directory navigation
+def fzf-cd [] {
+    let selected = (fd --type d --hidden --exclude .git | fzf --height 40% --reverse --border --prompt "Dirs > ")
+    if ($selected | is-not-empty) {
+        cd $selected
+    }
 }
 
 # ============================================================================

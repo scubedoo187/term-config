@@ -1,0 +1,12 @@
+ls
+which starship
+ls
+cd workspace/kuma
+ls
+gst
+gd
+git diff
+git status
+lazygit
+git
+git status
