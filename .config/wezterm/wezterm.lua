@@ -27,6 +27,7 @@ end
 -- Load and apply modular configurations
 local modules = {
 	"appearance",
+	"mux-domain",
 	"keybindings",
 }
 

@@ -99,6 +99,23 @@ function module.apply_to_config(config)
 		{ key = "s", mods = "LEADER", action = act.ShowLauncherArgs({ flags = "FUZZY|WORKSPACES" }) },
 		{ key = "t", mods = "LEADER", action = act.ShowLauncherArgs({ flags = "FUZZY|TABS" }) },
 
+		-- Multiplexer domain management
+		{
+			key = "d",
+			mods = "LEADER",
+			action = act.AttachDomain("local"),
+		},
+		{
+			key = "D",
+			mods = "LEADER|SHIFT",
+			action = act.DetachDomain("CurrentPaneDomain"),
+		},
+		{
+			key = "m",
+			mods = "LEADER",
+			action = act.ShowLauncherArgs({ flags = "FUZZY|DOMAINS", title = "Select Domain" }),
+		},
+
 		-- Workspace management
 		{
 			key = "w",
@@ -158,6 +175,8 @@ function module.apply_to_config(config)
 					if line then
 						local current_workspace = window:active_workspace()
 						local home = wezterm.home_dir
+						-- Use mux-server socket for workspace rename
+						-- This ensures workspace rename works through multiplexer
 						local socket_path = home .. "/.local/share/wezterm/sock"
 
 						-- Use full path that works on both Intel and Apple Silicon Macs
