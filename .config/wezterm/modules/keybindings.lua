@@ -1,5 +1,4 @@
 -- keybindings.lua - Key mappings and shortcuts for WezTerm
--- Retained from original wezterm-config for consistency
 local wezterm = require("wezterm")
 
 local module = {}
@@ -104,7 +103,7 @@ function module.apply_to_config(config)
 		{
 			key = "d",
 			mods = "LEADER",
-			action = act.AttachDomain("local"),
+			action = act.AttachDomain("unix"),
 		},
 		{
 			key = "D",

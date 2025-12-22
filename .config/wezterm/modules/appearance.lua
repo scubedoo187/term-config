@@ -1,5 +1,4 @@
 -- appearance.lua - Visual configuration for WezTerm
--- Retained from original wezterm-config for consistency
 local wezterm = require("wezterm")
 
 local module = {}

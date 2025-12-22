@@ -33,8 +33,12 @@ result-*
 *.sock
 *.pid
 
-# Serena cache
-.serena/cache/
+# Serena (AI tool config)
+.serena/
+
+# AI/Dev planning docs (keep local only)
+AGENTS.md
+IMPLEMENTATION_SUMMARY.md
 
 # Home Manager
 .nix-profile
