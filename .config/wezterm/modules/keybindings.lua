@@ -10,7 +10,10 @@ function module.apply_to_config(config)
 	-- Leader key configuration
 	config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1000 }
 
-	config.keys = {
+	-- Preserve any existing keys (e.g., from resurrect module)
+	local existing_keys = config.keys or {}
+
+	local keys = {
 		-- Copy mode
 		{ key = "[", mods = "LEADER", action = act.ActivateCopyMode },
 
@@ -94,9 +97,7 @@ function module.apply_to_config(config)
 			action = act.SendKey({ key = "a", mods = "CTRL" }),
 		},
 
-		-- Launchers
 		{ key = "l", mods = "ALT", action = act.ShowLauncher },
-		{ key = "s", mods = "LEADER", action = act.ShowLauncherArgs({ flags = "FUZZY|WORKSPACES" }) },
 		{ key = "t", mods = "LEADER", action = act.ShowLauncherArgs({ flags = "FUZZY|TABS" }) },
 
 		-- Multiplexer domain management
@@ -200,6 +201,11 @@ function module.apply_to_config(config)
 			}),
 		},
 	}
+
+	for _, key in ipairs(existing_keys) do
+		table.insert(keys, key)
+	end
+	config.keys = keys
 end
 
 return module

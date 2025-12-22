@@ -28,6 +28,14 @@ result-*
 *.tmp
 .cache/
 
+# Runtime artifacts
+*.log
+*.sock
+*.pid
+
+# Serena cache
+.serena/cache/
+
 # Home Manager
 .nix-profile
 .config/nushell/zoxide.nu

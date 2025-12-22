@@ -1,61 +1,86 @@
--- resurrect.lua - Session persistence using resurrect.wezterm plugin
--- Inspired by tmux-resurrect and tmux-continuum
--- Automatically saves and restores terminal state at configurable intervals
+-- resurrect.lua - Session persistence with smart_workspace_switcher integration
+-- Pinned versions: resurrect v1.0.0, smart_workspace_switcher 1.2.0
 local wezterm = require("wezterm")
 
 local module = {}
 
+local RESURRECT_URL = "https://github.com/MLFlexer/resurrect.wezterm?tag=v1.0.0"
+local WORKSPACE_SWITCHER_URL = "https://github.com/MLFlexer/smart_workspace_switcher.wezterm?tag=1.2.0"
+
 function module.apply_to_config(config)
-	-- Load resurrect plugin from GitHub
-	-- This will be automatically downloaded to ~/.local/share/wezterm/plugins/
 	local resurrect_ok, resurrect = pcall(function()
-		return wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
+		return wezterm.plugin.require(RESURRECT_URL)
 	end)
 
 	if not resurrect_ok then
-		wezterm.log_error("Failed to load resurrect.wezterm plugin: " .. tostring(resurrect))
+		wezterm.log_error("Failed to load resurrect.wezterm: " .. tostring(resurrect))
 		return
 	end
 
-	-- Configure state save directory (optional, default is ~/.local/share/wezterm/resurrect/)
-	-- resurrect.state_manager.change_state_save_dir(os.getenv("HOME") .. "/.local/share/wezterm/resurrect")
-
-	-- Setup periodic saving of workspace state every 15 minutes
-	-- This ensures that if WezTerm crashes or is closed, we can restore recent state
-	resurrect.state_manager.periodic_save({
-		interval_seconds = 900, -- 15 minutes
-		save_workspaces = true,
-		save_windows = true,
-		save_tabs = false, -- tabs are saved with windows
-	})
-
-	-- Restore the most recent workspace state on GUI startup
-	-- This allows session recovery after system reboot or WezTerm crash
-	wezterm.on("gui-startup", function()
-		resurrect.state_manager.resurrect_on_gui_startup()
+	local workspace_switcher_ok, workspace_switcher = pcall(function()
+		return wezterm.plugin.require(WORKSPACE_SWITCHER_URL)
 	end)
 
-	-- === Keybindings for manual session management ===
+	if not workspace_switcher_ok then
+		wezterm.log_error("Failed to load smart_workspace_switcher: " .. tostring(workspace_switcher))
+	end
 
-	-- Save current workspace state manually
+	resurrect.state_manager.periodic_save({
+		interval_seconds = 900,
+		save_workspaces = true,
+		save_windows = true,
+		save_tabs = false,
+	})
+
+	config.keys = config.keys or {}
+
+	if workspace_switcher_ok then
+		wezterm.on("smart_workspace_switcher.workspace_switcher.selected", function(window, path, label)
+			resurrect.state_manager.save_state(resurrect.workspace_state.get_workspace_state())
+		end)
+
+		wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, path, label)
+			local state = resurrect.state_manager.load_state(label, "workspace")
+			if state then
+				resurrect.workspace_state.restore_workspace(state, {
+					window = window,
+					relative = true,
+					restore_text = true,
+					on_pane_restore = resurrect.tab_state.default_on_pane_restore,
+				})
+			end
+		end)
+
+		table.insert(config.keys, {
+			key = "s",
+			mods = "LEADER",
+			action = workspace_switcher.switch_workspace(),
+		})
+
+		table.insert(config.keys, {
+			key = "a",
+			mods = "LEADER",
+			action = workspace_switcher.switch_to_prev_workspace(),
+		})
+	end
+
 	table.insert(config.keys, {
-		key = "S",
-		mods = "LEADER",
+		key = "s",
+		mods = "LEADER|CTRL",
 		action = wezterm.action_callback(function(win, pane)
 			resurrect.state_manager.save_state(resurrect.workspace_state.get_workspace_state())
 			win:toast_notification("Resurrect", "Workspace state saved", nil, 2000)
 		end),
 	})
 
-	-- Load workspace/window/tab state via fuzzy finder
 	table.insert(config.keys, {
-		key = "R",
+		key = "r",
 		mods = "LEADER",
-		action = wezterm.action_callback(function(win)
+		action = wezterm.action_callback(function(win, pane)
 			resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id, label)
 				local type = string.match(id, "^([^/]+)") -- extract type before '/'
 				id = string.match(id, "([^/]+)$") -- extract filename after '/'
-				id = string.match(id, "(.+)%.%..+$") -- remove file extension
+				id = string.match(id, "(.+)%..+$") -- remove file extension
 
 				local opts = {
 					relative = true,
@@ -79,10 +104,9 @@ function module.apply_to_config(config)
 		end),
 	})
 
-	-- Delete a saved state via fuzzy finder
 	table.insert(config.keys, {
-		key = "d",
-		mods = "ALT",
+		key = "x",
+		mods = "LEADER",
 		action = wezterm.action_callback(function(win, pane)
 			resurrect.fuzzy_loader.fuzzy_load(
 				win,

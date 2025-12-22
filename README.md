@@ -99,8 +99,9 @@ AGENTS.md               # 프로젝트 계획서
 | `-` | Split Vert | 세로 분할 |
 | `c` | New Tab | 새 탭 생성 |
 | `p/n` | Prev/Next Tab | 탭 이동 |
-| `w` | New Workspace | 새 워크스페이스 |
-| `s` | Workspace Launcher | 워크스페이스 퍼지 검색 |
+| `w` | New Workspace | 새 워크스페이스 생성 |
+| `s` | Smart Workspace Switcher | zoxide 기반 워크스페이스 전환 (자동 저장) |
+| `a` | Previous Workspace | 이전 워크스페이스로 전환 |
 | `t` | Tab Launcher | 탭 퍼지 검색 |
 | `z` | Zoom Pane | 창 줌 토글 |
 | `,` | Rename Tab | 탭 이름 변경 |
@@ -108,24 +109,28 @@ AGENTS.md               # 프로젝트 계획서
 | `d` | Attach Mux | 멀티플렉서 도메인 연결 |
 | `Shift+D` | Detach Mux | 멀티플렉서 도메인 분리 |
 | `m` | Domain Launcher | 도메인 퍼지 검색 |
-| `S` | Save Session | 현재 세션 상태 저장 |
-| `R` | Restore Session | 저장된 세션 복원 (퍼지) |
-| `Alt+d` | Delete Session | 저장된 세션 삭제 (퍼지) |
+| `CTRL+s` | Save Session | 현재 세션 상태 수동 저장 |
+| `r` | Restore Session | 저장된 세션 복원 (퍼지) |
+| `x` | Delete Session | 저장된 세션 삭제 (퍼지) |
 
 ---
 
 ## 🔄 세션 영속성 (Session Persistence)
 
 **목표**: Workspace 종료 없이 영속적 세션 유지  
-**구조**: Mux-Server (실시간) + Resurrect (영구 저장)
+**구조**: Mux-Server (실시간) + Resurrect (영구 저장) + Smart Workspace Switcher (자동 동기화)
+
+**플러그인 버전** (태그 고정):
+- `resurrect.wezterm`: v1.0.0
+- `smart_workspace_switcher.wezterm`: 1.2.0
 
 ### 작동 방식
 
 ```
 ┌─────────────────────────────────────┐
 │ GUI 시작 시                           │
-│ default_gui_startup_args로            │
-│ mux-server의 "local" 도메인에 연결    │
+│ mux-server의 "unix" 도메인에 연결     │
+│ (자동 복원 없음 - 빈 세션 증가 방지)    │
 └────────────┬────────────────────────┘
              │
              ├─ Layer 1: Mux-Server
@@ -133,10 +138,15 @@ AGENTS.md               # 프로젝트 계획서
              │  - 새 GUI로 즉시 재연결
              │  - launchd로 자동 시작
              │
-             └─ Layer 2: Resurrect
-                - 15분마다 자동 저장
-                - 시스템 재부팅/크래시 대응
-                - 수동 저장/복원 가능
+             ├─ Layer 2: Resurrect
+             │  - 15분마다 자동 저장
+             │  - 시스템 재부팅/크래시 대응
+             │  - 수동 저장/복원 가능
+             │
+             └─ Layer 3: Smart Workspace Switcher
+                - 워크스페이스 전환 시 자동 저장
+                - 새 워크스페이스 생성 시 저장된 상태 복원
+                - zoxide 연동으로 빠른 전환
 ```
 
 ### 설정
@@ -164,20 +174,25 @@ ps aux | grep wezterm-mux-server
 ### 사용 예시
 
 ```bash
-# 자동 동작
+# 일상적 사용 (프로세스 유지됨)
 1. WezTerm 실행 → mux-server에 자동 연결
-2. 세션 구성 작업
-3. GUI 종료 → 세션 유지
+2. Leader + s 로 워크스페이스 전환 (현재 상태 자동 저장)
+3. GUI 종료 → 세션 유지 (mux-server)
 4. 새 GUI 실행 → 기존 세션 복구
 
+# 재부팅 후 (프로세스 없음, 레이아웃만 복원)
+1. WezTerm 실행
+2. Leader + s 로 이전 워크스페이스 선택 → 저장된 레이아웃 복원
+   (또는 Leader + r 로 저장된 세션 직접 선택)
+
 # 수동 저장 (즉시 백업이 필요할 때)
-Leader + S  # 현재 workspace 상태 저장
+Leader + CTRL + s  # 현재 workspace 상태 저장
 
 # 복원 (저장된 상태 목록에서 선택)
-Leader + R  # 퍼지 파인더로 선택 후 복원
+Leader + r  # 퍼지 파인더로 선택 후 복원
 
 # 정리 (불필요한 저장된 상태 삭제)
-Alt + d     # 퍼지 파인더로 선택 후 삭제
+Leader + x  # 퍼지 파인더로 선택 후 삭제
 ```
 
 ### 트러블슈팅
@@ -197,7 +212,10 @@ tail -f ~/.local/share/wezterm/mux-server.log
 ls -la ~/.local/share/wezterm/resurrect/
 
 # 수동 복원 시도
-Leader + R로 퍼지 파인더 열어서 선택
+Leader + r 로 퍼지 파인더 열어서 선택
+
+# 워크스페이스 스위처로 복원
+Leader + s 로 이전 워크스페이스 선택
 ```
 
 ---
