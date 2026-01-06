@@ -45,3 +45,4 @@ IMPLEMENTATION_SUMMARY.md
 .config/nushell/zoxide.nu
 *.sqlite3*
 history.txt
+.config/fish/fish_variables
