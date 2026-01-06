@@ -1,7 +1,6 @@
 { config, pkgs, lib, osType ? "linux", ... }:
 
 {
-  # Home Manager configuration for cross-platform terminal setup
   home = {
     username = lib.mkDefault (builtins.getEnv "USER");
     homeDirectory = if osType == "macos" 
@@ -10,12 +9,10 @@
     stateVersion = "23.11";
 
     packages = with pkgs; [
-      # Core terminal tools
       wezterm
-      nushell
+      fish
       starship
       
-      # Essential utilities
       git
       zoxide
       fzf
@@ -24,22 +21,19 @@
       bat
       eza
       
-      # Optional
       neovim
       tmux
       
-      # Fonts (works on both platforms via nix)
       (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
     ];
 
-    # Symlink dotfiles
     file = {
       ".config/wezterm" = {
         source = ./.config/wezterm;
         recursive = true;
       };
-      ".config/nushell" = {
-        source = ./.config/nushell;
+      ".config/fish" = {
+        source = ./.config/fish;
         recursive = true;
       };
       ".config/starship.toml" = {
@@ -48,35 +42,50 @@
     };
   };
 
-  # Program configurations
   programs = {
-    # Nushell
-    nushell = {
+    fish = {
       enable = true;
-      package = pkgs.nushell;
-      configFile.source = ./.config/nushell/config.nu;
-      envFile.source = ./.config/nushell/env.nu;
+      interactiveShellInit = ''
+        set -g fish_greeting
+        
+        if type -q direnv
+            direnv hook fish | source
+        end
+        
+        if type -q zoxide
+            zoxide init fish | source
+        end
+        
+        if type -q fzf
+            fzf --fish | source
+        end
+        
+        if type -q starship
+            starship init fish | source
+        end
+      '';
+      functions = {
+        nix-shell = "command nix-shell --run fish $argv";
+        mkcd = "mkdir -p $argv[1] && cd $argv[1]";
+      };
     };
 
-    # Starship prompt
     starship = {
       enable = true;
+      enableFishIntegration = false;
       settings = builtins.fromTOML (builtins.readFile ./.config/starship.toml);
     };
 
-    # Zoxide
     zoxide = {
       enable = true;
-      enableNushellIntegration = true;
+      enableFishIntegration = false;
     };
 
-    # FZF
     fzf = {
       enable = true;
-      enableNushellIntegration = true;
+      enableFishIntegration = false;
     };
 
-    # Git configuration (minimal)
     git = {
       enable = true;
       extraConfig = {
@@ -85,35 +94,30 @@
       };
     };
 
-    # Bash (for compatibility if needed)
     bash = {
       enable = true;
     };
 
-    # Direnv (optional)
     direnv = {
-      enable = false;
-      nix-direnv.enable = false;
+      enable = true;
+      nix-direnv.enable = true;
     };
   };
 
-  # Shell aliases via home-manager
   home.shellAliases = {
     ".." = "cd ..";
     "..." = "cd ../..";
     "...." = "cd ../../..";
   };
 
-  # Manage session and environment variables
   home.sessionVariables = {
     EDITOR = "nvim";
     VISUAL = "nvim";
-    STARSHIP_SHELL = "nu";
+    STARSHIP_SHELL = "fish";
     XDG_CONFIG_HOME = "${config.home.homeDirectory}/.config";
     XDG_DATA_HOME = "${config.home.homeDirectory}/.local/share";
     XDG_CACHE_HOME = "${config.home.homeDirectory}/.cache";
   };
 
-  # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 }

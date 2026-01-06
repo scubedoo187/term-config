@@ -1,12 +1,12 @@
 # term-config
 
-Cross-platform terminal configuration for **WezTerm + Nushell + Starship**.
+Cross-platform terminal configuration for **WezTerm + Fish + Starship**.
 
 Unified terminal experience across macOS and Linux with persistent session management.
 
 ## Features
 
-- **Nushell** as default shell with **Starship** prompt
+- **Fish** as default shell with **Starship** prompt
 - **Session persistence** via mux-server + resurrect plugin
 - **Smart workspace switching** with auto-save/restore
 - **Nix-first** installation (also supports Homebrew)
@@ -20,7 +20,7 @@ git clone https://github.com/scubedoo187/term-config.git ~/term-config
 
 # Symlink configs
 ln -sf ~/term-config/.config/wezterm ~/.config/wezterm
-ln -sf ~/term-config/.config/nushell ~/.config/nushell
+ln -sf ~/term-config/.config/fish ~/.config/fish
 ln -sf ~/term-config/.config/starship.toml ~/.config/starship.toml
 ln -sf ~/term-config/.config/wezterm/wezterm.lua ~/.wezterm.lua
 
@@ -28,7 +28,7 @@ ln -sf ~/term-config/.config/wezterm/wezterm.lua ~/.wezterm.lua
 nix profile install .
 
 # Or install (Homebrew)
-brew install wezterm nushell starship
+brew install wezterm fish starship
 ```
 
 ## Keybindings
@@ -49,6 +49,14 @@ brew install wezterm nushell starship
 | `Ctrl+s` | Save session |
 | `r` | Restore session |
 | `x` | Delete session |
+
+**Fish/FZF Keybindings**
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+R` | History search (fzf) |
+| `Ctrl+T` | File finder (fzf) |
+| `Alt+C` | Directory jump (fzf) |
 
 ## Session Persistence
 
@@ -72,16 +80,18 @@ Workspaces auto-save on switch. After reboot, use `Leader+s` to restore.
       keybindings.lua    # Key mappings
       mux-domain.lua     # Mux-server config
       resurrect.lua      # Session persistence
-  nushell/
-    config.nu            # Shell config
-    env.nu               # Environment
+  fish/
+    config.fish          # Shell config
+    conf.d/
+      env.fish           # Environment
+      aliases.fish       # Aliases
   starship.toml          # Prompt config
 ```
 
 ## Requirements
 
 - WezTerm
-- Nushell
+- Fish
 - Starship
 - JetBrainsMono Nerd Font
 

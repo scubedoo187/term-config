@@ -4,8 +4,8 @@
 
 ### Prerequisites
 - WezTerm installed
-- Nushell installed (optional but recommended)
-- Starship installed (optional but recommended)
+- Fish installed (recommended)
+- Starship installed (recommended)
 
 ### macOS
 
@@ -127,6 +127,13 @@ Layer 2: Resurrect Plugin (backup)
 | `S` | Save current state |
 | `R` | Restore state (fuzzy) |
 | `ALT+D` | Delete saved state (fuzzy) |
+
+### Fish/FZF Keybindings
+| Key | Action |
+|-----|--------|
+| `CTRL+R` | History search (fzf) |
+| `CTRL+T` | File finder (fzf) |
+| `ALT+C` | Directory jump (fzf) |
 
 ### Other
 | Key | Action |

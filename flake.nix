@@ -1,5 +1,5 @@
 {
-  description = "Cross-platform terminal setup with WezTerm, Nushell, Starship (macOS/Linux)";
+  description = "Cross-platform terminal setup with WezTerm, Fish, Starship (macOS/Linux)";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -21,7 +21,7 @@
           buildInputs = with pkgs; [
             # Core terminal tools
             wezterm
-            nushell
+            fish
             starship
             
             # Essential utilities
@@ -40,7 +40,7 @@
           
           shellHook = ''
             echo "Terminal dev environment loaded"
-            echo "Available: wezterm, nu, starship, zoxide, fzf, rg, fd, bat, eza"
+            echo "Available: wezterm, fish, starship, zoxide, fzf, rg, fd, bat, eza"
           '';
         };
 
@@ -49,7 +49,7 @@
           name = "dotfiles-env";
           paths = with pkgs; [
             wezterm
-            nushell
+            fish
             starship
             zoxide
             fzf

@@ -61,6 +61,11 @@ install_nix() {
     curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
         sh -s -- install --no-confirm
     
+    # Source Nix into current shell immediately
+    if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+        . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+    fi
+    
     log_success "Nix installed successfully"
 }
 
@@ -100,24 +105,13 @@ setup_dotfiles() {
     ln -sf "$script_dir/.config/wezterm" "$config_dir/wezterm"
     log_success "Linked WezTerm config"
     
-    # Nushell config - handle both ~/.config/nushell and macOS path
-    if [ -d "$config_dir/nushell" ] || [ -L "$config_dir/nushell" ]; then
-        log_warning "Backing up existing ~/.config/nushell"
-        mv "$config_dir/nushell" "$config_dir/nushell.backup.$(date +%s)"
+    # Fish config
+    if [ -d "$config_dir/fish" ] || [ -L "$config_dir/fish" ]; then
+        log_warning "Backing up existing ~/.config/fish"
+        mv "$config_dir/fish" "$config_dir/fish.backup.$(date +%s)"
     fi
-    ln -sf "$script_dir/.config/nushell" "$config_dir/nushell"
-    log_success "Linked Nushell config to ~/.config/nushell"
-    
-    # macOS: Also link to ~/Library/Application Support/nushell (Nu default on macOS)
-    if [[ "$(detect_os)" == "macos" ]]; then
-        local macos_nu_dir="$HOME/Library/Application Support/nushell"
-        if [ -d "$macos_nu_dir" ] || [ -L "$macos_nu_dir" ]; then
-            log_warning "Backing up existing macOS Nushell config"
-            mv "$macos_nu_dir" "${macos_nu_dir}.backup.$(date +%s)"
-        fi
-        ln -sf "$script_dir/.config/nushell" "$macos_nu_dir"
-        log_success "Linked Nushell config to macOS path"
-    fi
+    ln -sf "$script_dir/.config/fish" "$config_dir/fish"
+    log_success "Linked Fish config to ~/.config/fish"
     
     # Starship config
     if [ -f "$config_dir/starship.toml" ] || [ -L "$config_dir/starship.toml" ]; then
@@ -217,7 +211,8 @@ main() {
     log_info "Next steps:"
     echo "  1. Reload your shell (or source ~/.nix-profile/etc/profile.d/nix.sh)"
     echo "  2. Run: wezterm"
-    echo "  3. WezTerm should open with Nushell as default shell"
+    echo "  3. WezTerm should open with Fish as default shell"
+    echo "  5. Run: ./scripts/setup-macos.sh (for session persistence)"
     echo "  4. Verify prompt: should show Starship"
     echo
     log_warning "Note: You may need to restart your terminal or run:"

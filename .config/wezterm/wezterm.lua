@@ -1,5 +1,5 @@
 -- Main WezTerm configuration file
--- Coordinates all modular components for Nushell-first terminal setup
+-- Coordinates all modular components for Fish shell terminal setup
 local wezterm = require("wezterm")
 
 local config = wezterm.config_builder()
@@ -39,15 +39,20 @@ for _, module_name in ipairs(modules) do
 	end
 end
 
--- Default shell: Nushell (cross-platform)
--- Try nix-profile path first, then fall back to system nu
-local nix_nu = home .. "/.nix-profile/bin/nu"
-local f = io.open(nix_nu, "r")
-if f then
-	f:close()
-	config.default_prog = { nix_nu }
-else
-	config.default_prog = { "nu" }
+-- Default shell: Fish (cross-platform)
+local fish_paths = {
+	home .. "/.nix-profile/bin/fish",
+	"/opt/homebrew/bin/fish",
+	"/usr/local/bin/fish",
+	"/usr/bin/fish",
+}
+for _, fish_path in ipairs(fish_paths) do
+	local f = io.open(fish_path, "r")
+	if f then
+		f:close()
+		config.default_prog = { fish_path }
+		break
+	end
 end
 
 -- Hide tab bar when only one tab
