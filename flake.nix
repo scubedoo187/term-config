@@ -32,6 +32,9 @@
             fd
             bat
             eza
+            fnm
+            
+            postgresql # psql client
             
             # Optional
             neovim
@@ -57,6 +60,9 @@
             fd
             bat
             eza
+            fnm
+            
+            postgresql # psql client
           ];
         };
       }

@@ -182,7 +182,7 @@ function module.apply_to_config(config)
 						-- Use full path that works on both Intel and Apple Silicon Macs
 						-- Falls back to 'wezterm' in PATH if neither common location exists
 						local cmd = string.format(
-							'export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"; WEZTERM_UNIX_SOCKET="%s" wezterm cli rename-workspace --workspace "%s" "%s" 2>&1',
+							'export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"; WEZTERM_UNIX_SOCKET="%s" wezterm cli rename-workspace --workspace "%s" "%s" 2>&1',
 							socket_path,
 							current_workspace,
 							line

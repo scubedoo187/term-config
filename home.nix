@@ -20,6 +20,9 @@
       fd
       bat
       eza
+      fnm
+      
+      postgresql # psql client
       
       neovim
       tmux
