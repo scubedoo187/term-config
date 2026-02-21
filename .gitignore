@@ -40,7 +40,14 @@ result-*
 AGENTS.md
 IMPLEMENTATION_SUMMARY.md
 
+# Fish (Fisher plugins)
+.config/fish/functions/
+.config/fish/completions/
+.config/fish/conf.d/git.fish
+.config/fish/man/
+
 # Home Manager
+
 .nix-profile
 .config/nushell/zoxide.nu
 *.sqlite3*

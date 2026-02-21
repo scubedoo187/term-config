@@ -193,6 +193,8 @@ main() {
     log_info "OS: $(detect_os)"
     echo
     
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
     # Step 1: Install Nix
     install_nix
     
@@ -204,6 +206,14 @@ main() {
     
     # Step 4: Install packages
     install_packages
+
+    # Step 5: Install Fish plugins
+    log_info "Installing Fish plugins..."
+    if [ -x "$script_dir/scripts/install-plugins.sh" ]; then
+        "$script_dir/scripts/install-plugins.sh"
+    else
+        log_warning "Plugin installer not found at $script_dir/scripts/install-plugins.sh"
+    fi
     
     echo
     log_success "✨ Installation complete!"

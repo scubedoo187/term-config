@@ -154,6 +154,16 @@ main() {
         log_warning "⚠ Socket not found yet - will be created on first GUI connection"
     fi
 
+    # Install Fish plugins
+    echo
+    log_info "Installing Fish plugins..."
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -x "$SCRIPT_DIR/install-plugins.sh" ]; then
+        "$SCRIPT_DIR/install-plugins.sh"
+    else
+        log_warning "Plugin installer not found at $SCRIPT_DIR/install-plugins.sh"
+    fi
+
     log_success "✨ macOS setup complete!"
     echo
     log_info "Configuration summary:"
