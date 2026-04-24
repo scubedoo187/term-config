@@ -96,25 +96,12 @@ function module.apply_to_config(config)
 			action = act.SendKey({ key = "a", mods = "CTRL" }),
 		},
 
+		{ key = "Copy", mods = "NONE", action = act.CopyTo("Clipboard") },
+		{ key = "Paste", mods = "NONE", action = act.PasteFrom("Clipboard") },
+		{ key = "c", mods = "CMD|SHIFT", action = act.CopyTo("Clipboard") },
+		{ key = "v", mods = "CMD|SHIFT", action = act.PasteFrom("Clipboard") },
 		{ key = "l", mods = "ALT", action = act.ShowLauncher },
 		{ key = "t", mods = "LEADER", action = act.ShowLauncherArgs({ flags = "FUZZY|TABS" }) },
-
-		-- Multiplexer domain management
-		{
-			key = "d",
-			mods = "LEADER",
-			action = act.AttachDomain("unix"),
-		},
-		{
-			key = "D",
-			mods = "LEADER|SHIFT",
-			action = act.DetachDomain("CurrentPaneDomain"),
-		},
-		{
-			key = "m",
-			mods = "LEADER",
-			action = act.ShowLauncherArgs({ flags = "FUZZY|DOMAINS", title = "Select Domain" }),
-		},
 
 		-- Workspace management
 		{
@@ -138,6 +125,16 @@ function module.apply_to_config(config)
 				end),
 			}),
 		},
+		{
+			key = "a",
+			mods = "LEADER",
+			action = act.EmitEvent("workspace-prev"),
+		},
+		{
+			key = "s",
+			mods = "LEADER",
+			action = act.ShowLauncherArgs({ flags = "FUZZY|WORKSPACES" }),
+		},
 
 		-- Window management
 		{
@@ -149,55 +146,6 @@ function module.apply_to_config(config)
 			key = "z",
 			mods = "LEADER",
 			action = act.TogglePaneZoomState,
-		},
-
-		-- Tab renaming
-		{
-			key = ",",
-			mods = "LEADER",
-			action = act.PromptInputLine({
-				description = "Enter new name for tab",
-				action = wezterm.action_callback(function(window, _, line)
-					if line then
-						window:active_tab():set_title(line)
-					end
-				end),
-			}),
-		},
-
-		-- Workspace renaming
-		{
-			key = ".",
-			mods = "LEADER",
-			action = act.PromptInputLine({
-				description = "Enter new name for workspace",
-				action = wezterm.action_callback(function(window, _, line)
-					if line then
-						local current_workspace = window:active_workspace()
-						local home = wezterm.home_dir
-						-- Use mux-server socket for workspace rename
-						-- This ensures workspace rename works through multiplexer
-						local socket_path = home .. "/.local/share/wezterm/sock"
-
-						-- Use full path that works on both Intel and Apple Silicon Macs
-						-- Falls back to 'wezterm' in PATH if neither common location exists
-						local cmd = string.format(
-							'export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"; WEZTERM_UNIX_SOCKET="%s" wezterm cli rename-workspace --workspace "%s" "%s" 2>&1',
-							socket_path,
-							current_workspace,
-							line
-						)
-						local handle = io.popen(cmd)
-						if handle then
-							local result = handle:read("*a")
-							handle:close()
-							if result and result ~= "" then
-								wezterm.log_info("Rename result: " .. tostring(result))
-							end
-						end
-					end
-				end),
-			}),
 		},
 	}
 

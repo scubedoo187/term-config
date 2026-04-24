@@ -3,10 +3,13 @@
 local wezterm = require("wezterm")
 
 local config = wezterm.config_builder()
+local act = wezterm.action
 
 -- Get the directory where this config file is located
 local home = os.getenv("HOME")
 local config_dir = home .. "/.config/wezterm"
+local xdg_data_home = os.getenv("XDG_DATA_HOME") or (home .. "/.local/share")
+local wezterm_data_dir = xdg_data_home .. "/wezterm"
 
 -- Add modules directory to Lua path (handle dotfiles repo symlink case)
 -- First try the standard location, then fall back to the dotfiles structure
@@ -29,6 +32,7 @@ local modules = {
 	"appearance",
 	"mux-domain",
 	"resurrect",
+	"workspace-history",
 	"keybindings",
 }
 
@@ -60,6 +64,74 @@ config.hide_tab_bar_if_only_one_tab = true
 
 -- Disable fancy tab bar (minimal UI)
 config.use_fancy_tab_bar = false
+
+-- Make mux daemon state/log locations explicit so they are easier to inspect
+-- and keep aligned with the launchd/systemd helpers in scripts/.
+config.daemon_options = {
+	pid_file = wezterm_data_dir .. "/pid",
+	stdout = wezterm_data_dir .. "/mux-server.log",
+	stderr = wezterm_data_dir .. "/mux-server-error.log",
+}
+
+config.hyperlink_rules = wezterm.default_hyperlink_rules()
+table.insert(config.hyperlink_rules, {
+	regex = [[((/Users|/private|/tmp)/[^\s<>"'`|:]+):([0-9]+)]],
+	format = "file://$1#$3",
+})
+table.insert(config.hyperlink_rules, {
+	regex = [[((/Users|/private|/tmp)/[^\s<>"'`|]+)]],
+	format = "file://$1",
+})
+
+wezterm.on("open-uri", function(window, pane, uri)
+	if uri:find("^file://") == 1 then
+		local target = uri:gsub("^file://", "")
+		local path, line = target:match("^(.-)#([0-9]+)$")
+		if not path then
+			path = target
+		end
+
+		local open_cmd
+		if line then
+			open_cmd = string.format(
+				'open -a MacVim --args +%s %q 2>/dev/null || open %q',
+				line,
+				path,
+				path
+			)
+		else
+			open_cmd = string.format('open -a MacVim %q 2>/dev/null || open %q', path, path)
+		end
+
+		window:perform_action(
+			act.SpawnCommandInNewWindow({
+				args = {
+					"sh",
+					"-lc",
+					open_cmd,
+				},
+			}),
+			pane
+		)
+		return false
+	end
+end)
+
+-- In tmux, use Cmd+Click rather than Shift+Click to bypass mouse reporting
+-- and open hyperlinks under the cursor.
+config.bypass_mouse_reporting_modifiers = "CMD"
+config.mouse_bindings = {
+	{
+		event = { Up = { streak = 1, button = "Left" } },
+		mods = "CMD",
+		action = act.OpenLinkAtMouseCursor,
+	},
+	{
+		event = { Down = { streak = 1, button = "Left" } },
+		mods = "CMD",
+		action = act.Nop,
+	},
+}
 
 -- Exit behavior: close window on last tab close
 config.exit_behavior = "Close"

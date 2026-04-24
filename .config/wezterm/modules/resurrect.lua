@@ -26,39 +26,17 @@ function module.apply_to_config(config)
 	end
 
 	resurrect.state_manager.periodic_save({
-		interval_seconds = 900,
+		interval_seconds = 1800,
 		save_workspaces = true,
-		save_windows = true,
+		save_windows = false,
 		save_tabs = false,
 	})
 
 	config.keys = config.keys or {}
 
 	if workspace_switcher_ok then
-		wezterm.on("smart_workspace_switcher.workspace_switcher.selected", function(window, path, label)
-			resurrect.state_manager.save_state(resurrect.workspace_state.get_workspace_state())
-		end)
-
-		wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, path, label)
-			local state = resurrect.state_manager.load_state(label, "workspace")
-			if state then
-				resurrect.workspace_state.restore_workspace(state, {
-					window = window,
-					relative = true,
-					restore_text = true,
-					on_pane_restore = resurrect.tab_state.default_on_pane_restore,
-				})
-			end
-		end)
-
 		table.insert(config.keys, {
-			key = "s",
-			mods = "LEADER",
-			action = workspace_switcher.switch_workspace(),
-		})
-
-		table.insert(config.keys, {
-			key = "a",
+			key = "A",
 			mods = "LEADER",
 			action = workspace_switcher.switch_to_prev_workspace(),
 		})
@@ -84,8 +62,8 @@ function module.apply_to_config(config)
 
 				local opts = {
 					relative = true,
-					restore_text = true,
-					on_pane_restore = resurrect.tab_state.default_on_pane_restore,
+					restore_text = false,
+					on_pane_restore = function() end,
 				}
 
 				if type == "workspace" then

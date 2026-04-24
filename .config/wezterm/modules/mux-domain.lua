@@ -19,18 +19,6 @@ function module.apply_to_config(config)
 	-- This ensures that new windows/tabs use the multiplexer domain
 	-- allowing sessions to persist across GUI restarts
 	config.default_gui_startup_args = { "connect", "unix" }
-
-	-- Event handler for GUI startup
-	-- Attempts to spawn window in mux domain if available
-	wezterm.on("gui-startup", function()
-		local mux = wezterm.mux
-		local _, _, window = mux.spawn_window({
-			domain = { DomainName = "unix" },
-		})
-		if window then
-			wezterm.log_info("Connected to local multiplexer domain")
-		end
-	end)
 end
 
 return module
