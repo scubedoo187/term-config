@@ -39,6 +39,10 @@
         source = ./.config/fish;
         recursive = true;
       };
+      ".config/tmux" = {
+        source = ./.config/tmux;
+        recursive = true;
+      };
       ".config/starship.toml" = {
         source = ./.config/starship.toml;
       };

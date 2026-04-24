@@ -112,6 +112,14 @@ setup_dotfiles() {
     fi
     ln -sf "$script_dir/.config/fish" "$config_dir/fish"
     log_success "Linked Fish config to ~/.config/fish"
+
+    # tmux config
+    if [ -d "$config_dir/tmux" ] || [ -L "$config_dir/tmux" ]; then
+        log_warning "Backing up existing ~/.config/tmux"
+        mv "$config_dir/tmux" "$config_dir/tmux.backup.$(date +%s)"
+    fi
+    ln -sf "$script_dir/.config/tmux" "$config_dir/tmux"
+    log_success "Linked tmux config"
     
     # Starship config
     if [ -f "$config_dir/starship.toml" ] || [ -L "$config_dir/starship.toml" ]; then
@@ -222,8 +230,9 @@ main() {
     echo "  1. Reload your shell (or source ~/.nix-profile/etc/profile.d/nix.sh)"
     echo "  2. Run: wezterm"
     echo "  3. WezTerm should open with Fish as default shell"
-    echo "  5. Run: ./scripts/setup-macos.sh (for session persistence)"
     echo "  4. Verify prompt: should show Starship"
+    echo "  5. New local WezTerm shells should auto-attach to tmux"
+    echo "  6. Optional legacy mux-server: ./scripts/setup-macos.sh"
     echo
     log_warning "Note: You may need to restart your terminal or run:"
     echo "  source ~/.nix-profile/etc/profile.d/nix.sh"
