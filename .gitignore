@@ -53,3 +53,4 @@ IMPLEMENTATION_SUMMARY.md
 *.sqlite3*
 history.txt
 .config/fish/fish_variables
+.omx/

@@ -7,6 +7,19 @@
 - Fish installed (recommended)
 - Starship installed (recommended)
 
+### Default Setup
+
+The default path is local WezTerm persistence:
+
+- WezTerm GUI connects to a local mux-server.
+- Fish is the shell inside panes.
+- `resurrect` is only a backup/manual restore layer.
+
+```bash
+cd ~/term-config
+./scripts/verify-config.sh
+```
+
 ### macOS
 
 ```bash
@@ -50,83 +63,50 @@ ls -la ~/.local/share/wezterm/sock
 ## Session Persistence Architecture
 
 ```
-Layer 1: Mux-Server (real-time)
-├── Runs as background daemon (launchd/systemd)
+Layer 1: WezTerm mux-server (real-time)
+├── Runs as a local daemon
 ├── GUI closes → sessions persist
-├── New GUI → reconnects instantly
+├── New GUI → reconnects to the same local workspace
 └── Socket: ~/.local/share/wezterm/sock
 
-Layer 2: Resurrect Plugin (backup)
-├── Auto-saves every 15 minutes
-├── Manual save/restore available
-├── Survives system reboot/crash
-└── Storage: ~/.local/share/wezterm/resurrect/
+Layer 2: Resurrect (backup)
+├── Manual save/restore for recovery
+├── Periodic backup snapshots
+└── Secondary safety net when mux state is insufficient
 ```
 
 ---
 
 ## Keybindings
 
-**Leader Key: `CTRL+A`**
-
-### Navigation
-| Key | Action |
-|-----|--------|
-| `h` | Move to left pane |
-| `j` | Move to down pane |
-| `k` | Move to up pane |
-| `l` | Move to right pane |
+**WezTerm Leader: `CTRL+A`**
 
 ### Pane Management
 | Key | Action |
 |-----|--------|
-| `\` | Split horizontal |
+| `|` | Split horizontal |
 | `-` | Split vertical |
-| `z` | Toggle zoom |
-| `CMD+W` | Close pane |
-
-### Pane Resize
-| Key | Action |
-|-----|--------|
-| `CTRL+CMD+H` | Resize left |
-| `CTRL+CMD+J` | Resize down |
-| `CTRL+CMD+K` | Resize up |
-| `CTRL+CMD+L` | Resize right |
-
-### Tabs
-| Key | Action |
-|-----|--------|
 | `c` | New tab |
-| `p` | Previous tab |
-| `n` | Next tab |
-| `,` | Rename tab |
+| `n/p` | Next/previous tab |
+| `z` | Toggle zoom |
 
-### Workspaces
+### Workspaces / Restore
 | Key | Action |
 |-----|--------|
 | `w` | New workspace |
-| `s` | Workspace launcher (fuzzy) |
-| `.` | Rename workspace |
+| `s` | Workspace list |
+| `a` | Workspace switcher |
+| `A` | Previous workspace |
+| `CTRL+S` | Save workspace state |
+| `r` | Restore saved state |
+| `x` | Delete saved state |
 
-### Launchers
+### WezTerm
 | Key | Action |
 |-----|--------|
-| `t` | Tab launcher (fuzzy) |
-| `m` | Domain launcher (fuzzy) |
+| `CMD+SHIFT+C` | Copy |
+| `CMD+SHIFT+V` | Paste |
 | `ALT+L` | Show launcher |
-
-### Multiplexer
-| Key | Action |
-|-----|--------|
-| `d` | Attach to local domain |
-| `SHIFT+D` | Detach from domain |
-
-### Session (Resurrect)
-| Key | Action |
-|-----|--------|
-| `S` | Save current state |
-| `R` | Restore state (fuzzy) |
-| `ALT+D` | Delete saved state (fuzzy) |
 
 ### Fish/FZF Keybindings
 | Key | Action |
@@ -135,17 +115,17 @@ Layer 2: Resurrect Plugin (backup)
 | `CTRL+T` | File finder (fzf) |
 | `ALT+C` | Directory jump (fzf) |
 
-### Other
-| Key | Action |
-|-----|--------|
-| `[` | Enter copy mode |
-| `CTRL+A, CTRL+A` | Send CTRL+A |
-
----
-
 ## Troubleshooting
 
-### Mux-server not starting
+### Stale WezTerm state
+
+```bash
+./scripts/cleanup-wezterm-state.sh
+```
+
+This removes stale `agent.*`, `gui-sock-*`, and oversized local WezTerm logs after `wezterm-mux-server` has been stopped.
+
+### Legacy mux-server not starting
 
 **macOS:**
 ```bash
@@ -160,14 +140,18 @@ systemctl --user restart wezterm-mux-server
 journalctl --user -u wezterm-mux-server -f
 ```
 
-### Socket not found
+### Pi warning: tmux extended-keys is off
+
+This setup no longer uses tmux as the primary persistence layer.
+
+### Legacy socket not found
 
 Wait a few seconds after starting mux-server, or launch WezTerm GUI once:
 ```bash
 ls -la ~/.local/share/wezterm/sock
 ```
 
-### GUI not connecting to mux-server
+### Legacy GUI not connecting to mux-server
 
 Verify mux-server is running:
 ```bash
@@ -179,17 +163,7 @@ Check WezTerm config connects to unix domain:
 config.default_gui_startup_args = { "connect", "unix" }
 ```
 
-### Resurrect not saving/restoring
-
-Check resurrect plugin is loaded:
-```bash
-ls ~/.local/share/wezterm/plugins/
-ls ~/.local/share/wezterm/resurrect/
-```
-
----
-
-## Uninstall
+## Uninstall Legacy mux-server
 
 ### macOS
 ```bash
