@@ -1,0 +1,7 @@
+{
+  "settings": {
+    "idleTimeout": 10,
+    "toolPrefix": "none"
+  },
+  "mcpServers": {}
+}

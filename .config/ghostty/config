@@ -1,0 +1,33 @@
+# Ghostty configuration for cmux-first workflow.
+# Ghostty is primarily a renderer; cmux owns shells, panes, and sessions.
+
+command = /opt/homebrew/bin/fish --login --interactive
+
+# Use a broadly available terminfo inside tmux/remote shells to avoid:
+# "missing or unsuitable terminal: xterm-ghostty".
+term = xterm-256color
+
+font-family = JetBrainsMono Nerd Font Mono
+font-size = 14
+font-style = bold
+
+window-padding-x = 0
+window-padding-y = 0
+macos-titlebar-style = transparent
+
+# Start with terminal applications receiving mouse input. Cmd+Shift+M toggles
+# this state across every tab: off for native selection/auto-copy, on for Pi UI.
+copy-on-select = clipboard
+mouse-shift-capture = never
+mouse-reporting = true
+
+# macOS: Cmd+hover/Cmd+click opens detected URLs.
+link-url = true
+link-previews = true
+keybind = all:super+shift+m=toggle_mouse_reporting
+
+theme = Seoulbones Dark
+background-opacity = 0.95
+
+cursor-style = block
+cursor-style-blink = true

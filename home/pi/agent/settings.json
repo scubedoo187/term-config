@@ -1,0 +1,47 @@
+{
+  "lastChangelogVersion": "0.85.1",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.6-sol",
+  "defaultThinkingLevel": "high",
+  "showHardwareCursor": false,
+  "editorPaddingX": 0,
+  "theme": "dark",
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 19040
+  },
+  "autocompleteMaxVisible": 20,
+  "hideThinkingBlock": false,
+  "packages": [
+    "npm:pi-thinking-timer",
+    "npm:pi-codex-web-search",
+    "npm:pi-extension-manager",
+    "npm:pi-mcp-adapter",
+    "npm:pi-tool-display",
+    "npm:pi-ask-user",
+    "npm:pi-chrome-dev-tools",
+    "npm:pi-btw",
+    "npm:@latentminds/pi-quotas",
+    "npm:pi-rtk-optimizer",
+    "npm:@ogulcancelik/pi-codex-subagents",
+    "npm:pi-dynamic-workflows",
+    "npm:pi-openai-fast-mode"
+  ],
+  "enabledModels": [
+    "openai-codex/gpt-5.6-luna",
+    "openai-codex/gpt-5.6-sol",
+    "openai-codex/gpt-5.6-terra",
+    "openai-codex/gpt-6-astra",
+    "anthropic/claude-fable-5-1",
+    "anthropic/claude-opus-5",
+    "anthropic/claude-sonnet-5"
+  ],
+  "steeringMode": "all",
+  "followUpMode": "all",
+  "terminal": {
+    "showTerminalProgress": false,
+    "clearOnShrink": false,
+    "imageWidthCells": 120
+  },
+  "tuiMode": "regular"
+}

@@ -1,0 +1,4 @@
+{
+  "connectionString": "postgres://application:<password>@<host>/<dbname>",
+  "dbname": "volare-prod"
+}

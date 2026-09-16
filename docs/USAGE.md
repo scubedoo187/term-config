@@ -1,179 +1,158 @@
 # Usage Guide
 
-## Installation
+## Default Setup
 
-### Prerequisites
-- WezTerm installed
-- Fish installed (recommended)
-- Starship installed (recommended)
+The default workflow is tmux-first persistence:
 
-### Default Setup
+```text
+Ghostty / WezTerm = GUI renderer
+Fish             = login shell and shared UX
+Starship         = prompt
+tmux             = sessions, panes, windows, persistence
+```
 
-The default path is local WezTerm persistence:
-
-- WezTerm GUI connects to a local mux-server.
-- Fish is the shell inside panes.
-- `resurrect` is only a backup/manual restore layer.
+Ghostty is preferred on macOS. WezTerm is kept available, but native WezTerm mux/workspace persistence is disabled in the active config.
 
 ```bash
 cd ~/term-config
 ./scripts/verify-config.sh
 ```
 
-### macOS
+## Ghostty
+
+Config path:
+
+```text
+~/.config/ghostty/config -> ~/term-config/.config/ghostty/config
+```
+
+If Ghostty generated this fallback file earlier, remove it so the XDG dotfile stays authoritative:
+
+```text
+~/Library/Application Support/com.mitchellh.ghostty/config
+```
+
+Important settings:
+
+```ini
+command = /opt/homebrew/bin/fish --login --interactive
+term = xterm-256color
+font-family = JetBrainsMono Nerd Font Mono
+theme = Seoulbones Dark
+scrollback-limit = 100000
+```
+
+`term = xterm-256color` intentionally avoids tmux/ncurses warnings such as:
+
+```text
+missing or unsuitable terminal: xterm-ghostty
+```
+
+Validate:
 
 ```bash
-cd ~/term-config
-./scripts/setup-macos.sh
+ghostty +validate-config --config-file ~/.config/ghostty/config
+ghostty +show-config | rg '^(command|term|font-family|theme|scrollback-limit)'
 ```
 
-This will:
-1. Detect `wezterm-mux-server` binary location automatically
-2. Generate launchd plist with correct paths
-3. Register and start the mux-server service
-4. Verify socket creation
+## Fish auto tmux attach
 
-**Verification:**
-```bash
-launchctl list | grep wezterm
-ls -la ~/.local/share/wezterm/sock
-```
-
-### Linux
+For local GUI terminals, Fish auto-attaches to tmux session `main`:
 
 ```bash
-cd ~/term-config
-./scripts/setup-linux.sh
+tmux attach-session -t main || tmux new-session -s main
 ```
 
-This will:
-1. Detect `wezterm-mux-server` binary location automatically
-2. Generate systemd user service with correct paths
-3. Enable and start the mux-server service
-4. Verify socket creation
+Auto attach is skipped when:
 
-**Verification:**
+- already inside tmux
+- running over SSH
+- `DISABLE_AUTO_TMUX` is set
+- tmux is unavailable
+
+One-off bypass:
+
 ```bash
-systemctl --user status wezterm-mux-server
-ls -la ~/.local/share/wezterm/sock
+DISABLE_AUTO_TMUX=1 fish
 ```
 
----
+## tmux
 
-## Session Persistence Architecture
+`Ctrl+A` belongs to tmux. GUI terminals should not intercept it.
 
-```
-Layer 1: WezTerm mux-server (real-time)
-├── Runs as a local daemon
-├── GUI closes → sessions persist
-├── New GUI → reconnects to the same local workspace
-└── Socket: ~/.local/share/wezterm/sock
+Useful commands:
 
-Layer 2: Resurrect (backup)
-├── Manual save/restore for recovery
-├── Periodic backup snapshots
-└── Secondary safety net when mux state is insufficient
+```bash
+tmux ls
+tmux attach -t main
+tmux new -s main
+tmux detach
 ```
 
----
+The config enables extended keys for Pi/Codex compatibility:
+
+```tmux
+set -g extended-keys on
+```
+
+Verify:
+
+```bash
+tmux show-options -g extended-keys
+```
+
+Expected:
+
+```text
+extended-keys on
+```
 
 ## Keybindings
 
-**WezTerm Leader: `CTRL+A`**
+### tmux
 
-### Pane Management
-| Key | Action |
-|-----|--------|
-| `|` | Split horizontal |
-| `-` | Split vertical |
-| `c` | New tab |
-| `n/p` | Next/previous tab |
-| `z` | Toggle zoom |
+Use tmux for pane/window/session management via `Ctrl+A` prefix.
 
-### Workspaces / Restore
-| Key | Action |
-|-----|--------|
-| `w` | New workspace |
-| `s` | Workspace list |
-| `a` | Workspace switcher |
-| `A` | Previous workspace |
-| `CTRL+S` | Save workspace state |
-| `r` | Restore saved state |
-| `x` | Delete saved state |
+### GUI terminal
 
-### WezTerm
 | Key | Action |
 |-----|--------|
 | `CMD+SHIFT+C` | Copy |
 | `CMD+SHIFT+V` | Paste |
-| `ALT+L` | Show launcher |
+| `ALT+L` | WezTerm launcher |
 
-### Fish/FZF Keybindings
+### Fish/FZF
+
 | Key | Action |
 |-----|--------|
-| `CTRL+R` | History search (fzf) |
-| `CTRL+T` | File finder (fzf) |
-| `ALT+C` | Directory jump (fzf) |
+| `CTRL+R` | History search |
+| `CTRL+T` | File finder |
+| `ALT+C` | Directory jump |
 
-## Troubleshooting
+## Legacy WezTerm mux notes
 
-### Stale WezTerm state
+WezTerm native mux-server/resurrect/workspace-history files may still exist in the repo for reference, but they are not loaded by the active `wezterm.lua`.
+
+If stale WezTerm mux state causes problems after migration:
 
 ```bash
+./scripts/check-wezterm-mux-health.sh
 ./scripts/cleanup-wezterm-state.sh
 ```
 
-This removes stale `agent.*`, `gui-sock-*`, and oversized local WezTerm logs after `wezterm-mux-server` has been stopped.
-
-### Legacy mux-server not starting
-
-**macOS:**
-```bash
-launchctl unload ~/Library/LaunchAgents/com.wezterm.mux-server.plist
-launchctl load ~/Library/LaunchAgents/com.wezterm.mux-server.plist
-tail -f ~/.local/share/wezterm/mux-server.log
-```
-
-**Linux:**
-```bash
-systemctl --user restart wezterm-mux-server
-journalctl --user -u wezterm-mux-server -f
-```
-
-### Pi warning: tmux extended-keys is off
-
-This setup no longer uses tmux as the primary persistence layer.
-
-### Legacy socket not found
-
-Wait a few seconds after starting mux-server, or launch WezTerm GUI once:
-```bash
-ls -la ~/.local/share/wezterm/sock
-```
-
-### Legacy GUI not connecting to mux-server
-
-Verify mux-server is running:
-```bash
-pgrep -f wezterm-mux-server
-```
-
-Check WezTerm config connects to unix domain:
-```lua
-config.default_gui_startup_args = { "connect", "unix" }
-```
-
-## Uninstall Legacy mux-server
+Stop old launch agents/services if needed:
 
 ### macOS
+
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.wezterm.mux-server.plist
-rm ~/Library/LaunchAgents/com.wezterm.mux-server.plist
+launchctl unload ~/Library/LaunchAgents/com.wezterm.mux-server.plist 2>/dev/null || true
+rm -f ~/Library/LaunchAgents/com.wezterm.mux-server.plist
 ```
 
 ### Linux
+
 ```bash
-systemctl --user disable --now wezterm-mux-server
-rm ~/.config/systemd/user/wezterm-mux-server.service
+systemctl --user disable --now wezterm-mux-server 2>/dev/null || true
+rm -f ~/.config/systemd/user/wezterm-mux-server.service
 systemctl --user daemon-reload
 ```

@@ -1,0 +1,13 @@
+{
+  "defaultMode": "fast",
+  "fastFreshness": "cached",
+  "deepFreshness": "live",
+  "fastMaxSources": 3,
+  "deepMaxSources": 5,
+  "defuddleMode": "direct",
+  "fastTimeoutMs": 90000,
+  "deepTimeoutMs": 240000,
+  "defuddleTimeoutMs": 45000,
+  "fastQueryBudget": 6,
+  "deepQueryBudget": 18
+}

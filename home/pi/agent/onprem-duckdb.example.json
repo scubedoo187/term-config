@@ -1,0 +1,19 @@
+{
+  "mode": "remote-rq",
+  "workdir": "/home/services/linear",
+  "localWorkdir": "~/workspace/linear",
+  "dlkCommand": "./dlk shell --remote",
+  "remoteQueryFunction": "rq",
+  "timeoutSeconds": 300,
+  "maxBytes": 1000000,
+  "ssh": {
+    "host": "ONPREM_HOST_OR_IP",
+    "user": "yg.jung",
+    "passwordCommand": "security find-generic-password -s tridge-onprem -a yg.jung -w",
+    "sshTty": false,
+    "sshOptions": [
+      "-o", "PreferredAuthentications=password",
+      "-o", "PubkeyAuthentication=no"
+    ]
+  }
+}

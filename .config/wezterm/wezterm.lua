@@ -8,9 +8,6 @@ local act = wezterm.action
 -- Get the directory where this config file is located
 local home = os.getenv("HOME")
 local config_dir = home .. "/.config/wezterm"
-local xdg_data_home = os.getenv("XDG_DATA_HOME") or (home .. "/.local/share")
-local wezterm_data_dir = xdg_data_home .. "/wezterm"
-
 -- Add modules directory to Lua path (handle dotfiles repo symlink case)
 -- First try the standard location, then fall back to the dotfiles structure
 local modules_path = config_dir .. "/modules/?.lua"
@@ -30,9 +27,6 @@ end
 -- Load and apply modular configurations
 local modules = {
 	"appearance",
-	"mux-domain",
-	"resurrect",
-	"workspace-history",
 	"keybindings",
 }
 
@@ -64,14 +58,6 @@ config.hide_tab_bar_if_only_one_tab = true
 
 -- Disable fancy tab bar (minimal UI)
 config.use_fancy_tab_bar = false
-
--- Make mux daemon state/log locations explicit so they are easier to inspect
--- and keep aligned with the launchd/systemd helpers in scripts/.
-config.daemon_options = {
-	pid_file = wezterm_data_dir .. "/pid",
-	stdout = wezterm_data_dir .. "/mux-server.log",
-	stderr = wezterm_data_dir .. "/mux-server-error.log",
-}
 
 config.hyperlink_rules = wezterm.default_hyperlink_rules()
 table.insert(config.hyperlink_rules, {

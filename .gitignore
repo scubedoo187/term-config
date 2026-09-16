@@ -37,7 +37,7 @@ result-*
 .serena/
 
 # AI/Dev planning docs (keep local only)
-AGENTS.md
+/AGENTS.md
 IMPLEMENTATION_SUMMARY.md
 
 # Fish (Fisher plugins)
@@ -54,3 +54,15 @@ IMPLEMENTATION_SUMMARY.md
 history.txt
 .config/fish/fish_variables
 .omx/
+
+# Home-dir app configs: secrets and machine-local state stay out
+home/**/auth.json
+home/pi/agent/datahub-psql.json
+home/pi/agent/queenspark-psql.json
+home/pi/agent/volare-psql.json
+home/pi/agent/onprem-duckdb.json
+home/claude/settings.local.json
+
+# Claude Code project scope: runtime state and per-machine local settings
+.claude/.headroom_wrap_*
+.claude/settings.local.json

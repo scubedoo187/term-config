@@ -49,3 +49,4 @@ end
 function nix-shell
     command nix-shell --run fish $argv
 end
+
