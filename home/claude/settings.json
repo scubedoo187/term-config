@@ -4,6 +4,7 @@
     "VISUAL": "nvim",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
+  "model": "opus[1m]",
   "hooks": {
     "SessionStart": [
       {
