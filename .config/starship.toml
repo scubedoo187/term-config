@@ -83,7 +83,7 @@ detect_files = ["docker-compose.yml", "docker-compose.yaml", "Dockerfile"]
 # LANGUAGE MODULES
 # ============================================================================
 [nodejs]
-symbol = " "
+symbol = " "
 format = "via [$symbol($version )]($style)"
 style = "bold green"
 detect_extensions = ["js", "mjs", "cjs", "ts", "mts", "cts"]
@@ -91,7 +91,7 @@ detect_files = ["package.json", ".node-version", ".nvmrc"]
 detect_folders = ["node_modules"]
 
 [python]
-symbol = " "
+symbol = " "
 format = "via [$symbol($version )]($style)"
 style = "bold yellow"
 detect_extensions = ["py"]
@@ -105,7 +105,7 @@ detect_extensions = ["rs"]
 detect_files = ["Cargo.toml"]
 
 [golang]
-symbol = " "
+symbol = " "
 format = "via [$symbol($version )]($style)"
 style = "bold cyan"
 detect_extensions = ["go"]

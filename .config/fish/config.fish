@@ -3,10 +3,14 @@ set -g fish_greeting
 
 set -g __term_config_cache_dir "$XDG_CACHE_HOME/term-config/fish"
 
-function __term_config_source_cached_init --argument-names cache_name generator --description "Source cached shell init output"
+function __term_config_source_cached_init --description "Source cached shell init output"
+    set -l cache_name $argv[1]
+    set -l generator $argv[2..]
     set -l cache_file "$__term_config_cache_dir/$cache_name"
 
-    if test -r "$cache_file"
+    # -s (not -r): an empty cache file means a previous generation failed,
+    # so regenerate instead of sourcing nothing forever.
+    if test -s "$cache_file"
         source "$cache_file"
         return 0
     end
@@ -16,8 +20,15 @@ function __term_config_source_cached_init --argument-names cache_name generator 
     end
 
     mkdir -p "$__term_config_cache_dir"
-    $generator > "$cache_file"
-    source "$cache_file"
+    set -l tmp_file "$cache_file.tmp.$fish_pid"
+    if $generator >"$tmp_file" 2>/dev/null; and test -s "$tmp_file"
+        mv -f "$tmp_file" "$cache_file"
+        source "$cache_file"
+    else
+        # Never leave a broken cache behind; fall back to direct init.
+        rm -f "$tmp_file"
+        $generator | source
+    end
 end
 
 # FZF options
