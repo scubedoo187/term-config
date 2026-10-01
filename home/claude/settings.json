@@ -138,7 +138,16 @@
   },
   "language": "한국어",
   "alwaysThinkingEnabled": true,
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "medium"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    }
+  },
   "skipDangerousModePermissionPrompt": true,
   "verbose": true,
-  "autoContinueAtUsageLimit": true
+  "autoContinueAtUsageLimit": true,
+  "agentPushNotifEnabled": true
 }

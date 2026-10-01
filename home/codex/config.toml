@@ -3,8 +3,8 @@ notify = [
   "turn-ended",
 ]
 model = "gpt-6-astra"
-model_reasoning_effort = "medium"
-service_tier = "default"
+model_reasoning_effort = "high"
+service_tier = "fast"
 sandbox_mode = "danger-full-access"
 approvals_reviewer = "user"
 
@@ -38,9 +38,6 @@ source_type = "git"
 source = "https://github.com/DietrichGebert/ponytail.git"
 
 [plugins."visualize@openai-bundled"]
-enabled = true
-
-[plugins."sites@openai-bundled"]
 enabled = true
 
 [plugins."browser@openai-bundled"]
@@ -96,8 +93,8 @@ BROWSER_USE_TINYSKY_ENABLED = "1"
 NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = ""
 NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = ""
 BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-BROWSER_USE_CODEX_APP_VERSION = "26.908.70816"
-NODE_REPL_TRUSTED_SERVICES = '{"browser":"/Users/yg_jung/.codex/plugins/cache/openai-bundled/browser/26.908.70816/scripts/browser-service.mjs"}'
+BROWSER_USE_CODEX_APP_VERSION = "26.911.61220"
+NODE_REPL_TRUSTED_SERVICES = '{"browser":"/Users/yg_jung/.codex/plugins/cache/openai-bundled/browser/26.911.61220/scripts/browser-service.mjs"}'
 CODEX_CLI_PATH = "/Applications/ChatGPT.app/Contents/Resources/codex"
 
 [mcp_servers.chrome-devtools]
@@ -122,10 +119,12 @@ trusted_hash = "sha256:1423b56c1322f96c8f74c51c1e7ae9a047b904c1fa43ee9165d462fd7
 [tui]
 status_line = ["model", "reasoning", "git-branch", "context-remaining", "weekly-limit", "thread-title", "task-progress", "current-dir", "used-tokens", "total-input-tokens", "total-output-tokens", "estimated-thread-cost", "thread-id", "run-state", "fast-mode"]
 status_line_use_colors = true
+screen_reader_detection_done = true
 
 [tui.model_availability_nux]
 "gpt-5.6-sol" = 1
 gpt-6-astra = 4
+"gpt-6.1-sol" = 2
 
 [shell_environment_policy.set]
 NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,e13fd947e846d3d306e9249dd3c73d14931b6494803dbafb16cef85e6add9506"
