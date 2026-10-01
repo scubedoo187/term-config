@@ -97,14 +97,14 @@ setup_dotfiles() {
     # Create symlinks
     log_info "Creating symlinks..."
     
-    # WezTerm config
-    if [ -d "$config_dir/wezterm" ] || [ -L "$config_dir/wezterm" ]; then
-        log_warning "Backing up existing ~/.config/wezterm"
-        mv "$config_dir/wezterm" "$config_dir/wezterm.backup.$(date +%s)"
+    # Ghostty config
+    if [ -d "$config_dir/ghostty" ] || [ -L "$config_dir/ghostty" ]; then
+        log_warning "Backing up existing ~/.config/ghostty"
+        mv "$config_dir/ghostty" "$config_dir/ghostty.backup.$(date +%s)"
     fi
-    ln -sf "$script_dir/.config/wezterm" "$config_dir/wezterm"
-    log_success "Linked WezTerm config"
-    
+    ln -sfn "$script_dir/.config/ghostty" "$config_dir/ghostty"
+    log_success "Linked Ghostty config"
+
     # Fish config
     if [ -d "$config_dir/fish" ] || [ -L "$config_dir/fish" ]; then
         log_warning "Backing up existing ~/.config/fish"
@@ -128,14 +128,14 @@ setup_dotfiles() {
     fi
     ln -sf "$script_dir/.config/starship.toml" "$config_dir/starship.toml"
     log_success "Linked Starship config"
-    
-    # WezTerm main config (~/.wezterm.lua)
-    if [ -f "$HOME/.wezterm.lua" ] || [ -L "$HOME/.wezterm.lua" ]; then
-        log_warning "Backing up existing ~/.wezterm.lua"
-        mv "$HOME/.wezterm.lua" "$HOME/.wezterm.lua.backup.$(date +%s)"
+
+    # Ghostty on macOS reads this path before the XDG one, so a stale copy here
+    # silently wins over the tracked config.
+    local ghostty_appsupport="$HOME/Library/Application Support/com.mitchellh.ghostty/config"
+    if [ -f "$ghostty_appsupport" ] && [ ! -L "$ghostty_appsupport" ]; then
+        log_warning "Backing up Ghostty's app-support config so the XDG dotfile wins"
+        mv "$ghostty_appsupport" "$ghostty_appsupport.backup.$(date +%s)"
     fi
-    ln -sf "$script_dir/.config/wezterm/wezterm.lua" "$HOME/.wezterm.lua"
-    log_success "Linked ~/.wezterm.lua"
 }
 
 # Install packages via Nix
@@ -228,11 +228,16 @@ main() {
     echo
     log_info "Next steps:"
     echo "  1. Reload your shell (or source ~/.nix-profile/etc/profile.d/nix.sh)"
-    echo "  2. Run: wezterm"
-    echo "  3. WezTerm should open with Fish as default shell"
-    echo "  4. Verify prompt: should show Starship"
-    echo "  5. New local WezTerm shells should auto-attach to tmux"
-    echo "  6. Optional legacy mux-server: ./scripts/setup-macos.sh"
+    echo "  2. Install the Ghostty GUI and set Fish as the login shell:"
+    case "$(detect_os)" in
+        macos) echo "       ./scripts/setup-macos.sh" ;;
+        linux) echo "       ./scripts/setup-linux.sh" ;;
+        *)     echo "       ./scripts/setup-macos.sh  (or setup-linux.sh)" ;;
+    esac
+    echo "  3. Register this checkout's git filters: ./scripts/setup-git-filters.sh"
+    echo "  4. Launch Ghostty - it should open Fish with a Starship prompt and"
+    echo "     auto-attach the tmux session named 'main'"
+    echo "  5. Verify everything: ./scripts/verify-config.sh"
     echo
     log_warning "Note: You may need to restart your terminal or run:"
     echo "  source ~/.nix-profile/etc/profile.d/nix.sh"

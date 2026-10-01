@@ -5,13 +5,14 @@
 The default workflow is tmux-first persistence:
 
 ```text
-Ghostty / WezTerm = GUI renderer
-Fish             = login shell and shared UX
-Starship         = prompt
-tmux             = sessions, panes, windows, persistence
+Ghostty  = GUI renderer
+Fish     = login shell and shared UX
+Starship = prompt
+tmux     = sessions, panes, windows, persistence
 ```
 
-Ghostty is preferred on macOS. WezTerm is kept available, but native WezTerm mux/workspace persistence is disabled in the active config.
+Ghostty owns nothing but rendering, so sessions survive a GUI restart and the
+key layer is identical on every OS.
 
 ```bash
 cd ~/term-config
@@ -39,7 +40,6 @@ command = /opt/homebrew/bin/fish --login --interactive
 term = xterm-256color
 font-family = JetBrainsMono Nerd Font Mono
 theme = Seoulbones Dark
-scrollback-limit = 100000
 ```
 
 `term = xterm-256color` intentionally avoids tmux/ncurses warnings such as:
@@ -52,7 +52,7 @@ Validate:
 
 ```bash
 ghostty +validate-config --config-file ~/.config/ghostty/config
-ghostty +show-config | rg '^(command|term|font-family|theme|scrollback-limit)'
+ghostty +show-config | rg '^(command|term|font-family|theme)'
 ```
 
 ## Fish auto tmux attach
@@ -119,7 +119,10 @@ Use tmux for pane/window/session management via `Ctrl+A` prefix.
 |-----|--------|
 | `CMD+SHIFT+C` | Copy |
 | `CMD+SHIFT+V` | Paste |
-| `ALT+L` | WezTerm launcher |
+| `CMD+SHIFT+M` | Toggle mouse reporting across every tab |
+
+Mouse reporting starts on, so terminal applications receive mouse input. Toggle
+it off for native selection and `copy-on-select`.
 
 ### Fish/FZF
 
@@ -129,24 +132,19 @@ Use tmux for pane/window/session management via `Ctrl+A` prefix.
 | `CTRL+T` | File finder |
 | `ALT+C` | Directory jump |
 
-## Legacy WezTerm mux notes
+## Retiring an older WezTerm setup
 
-WezTerm native mux-server/resurrect/workspace-history files may still exist in the repo for reference, but they are not loaded by the active `wezterm.lua`.
-
-If stale WezTerm mux state causes problems after migration:
-
-```bash
-./scripts/check-wezterm-mux-health.sh
-./scripts/cleanup-wezterm-state.sh
-```
-
-Stop old launch agents/services if needed:
+This repo previously ran WezTerm with a persistent `wezterm-mux-server`. tmux
+does that job now, and the agent is gone from the configs. A machine that was
+set up before the switch still has it registered, where it keeps restarting and
+growing `mux-server-error.log`, so clear it once per machine.
 
 ### macOS
 
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.wezterm.mux-server.plist 2>/dev/null || true
+launchctl bootout "gui/$(id -u)/com.wezterm.mux-server" 2>/dev/null || true
 rm -f ~/Library/LaunchAgents/com.wezterm.mux-server.plist
+rm -rf ~/.local/share/wezterm ~/.wezterm.lua ~/.config/wezterm*
 ```
 
 ### Linux
@@ -155,4 +153,5 @@ rm -f ~/Library/LaunchAgents/com.wezterm.mux-server.plist
 systemctl --user disable --now wezterm-mux-server 2>/dev/null || true
 rm -f ~/.config/systemd/user/wezterm-mux-server.service
 systemctl --user daemon-reload
+rm -rf ~/.local/share/wezterm ~/.wezterm.lua ~/.config/wezterm*
 ```

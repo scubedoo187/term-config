@@ -1,5 +1,5 @@
 {
-  description = "Cross-platform terminal setup with WezTerm, Fish, Starship (macOS/Linux)";
+  description = "Cross-platform terminal setup with Ghostty, Fish, Starship, tmux (macOS/Linux)";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -20,7 +20,6 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             # Core terminal tools
-            wezterm
             fish
             starship
             
@@ -43,7 +42,7 @@
           
           shellHook = ''
             echo "Terminal dev environment loaded"
-            echo "Available: wezterm, fish, starship, zoxide, fzf, rg, fd, bat, eza"
+            echo "Available: fish, starship, tmux, zoxide, fzf, rg, fd, bat, eza"
           '';
         };
 
@@ -51,7 +50,6 @@
         packages.default = pkgs.symlinkJoin {
           name = "dotfiles-env";
           paths = with pkgs; [
-            wezterm
             fish
             starship
             zoxide

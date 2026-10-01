@@ -1,38 +1,52 @@
 # term-config
 
-Cross-platform terminal configuration for **Ghostty/WezTerm + Fish + Starship + tmux**.
+Cross-platform terminal configuration for **Ghostty + Fish + Starship + tmux**.
 
-The current default workflow is **terminal GUI as renderer, tmux as persistence**. Ghostty is preferred on macOS; WezTerm remains available as a lightweight GUI without native mux/workspace persistence.
+The workflow is **terminal GUI as renderer, tmux as persistence**: Ghostty draws
+pixels and owns nothing else, so sessions, panes and windows survive a GUI
+restart and behave identically on every OS.
 
 ## Features
 
+- **Ghostty** as the GUI renderer, configured from `~/.config/ghostty/config`
 - **Fish** as default shell with **Starship** prompt
 - **tmux** for sessions, windows, panes, and persistence
-- **Ghostty** config managed under `~/.config/ghostty/config`
-- **WezTerm** kept minimal; no `Ctrl+A` leader or native mux-server dependency
 - **Nix-first** installation, with Homebrew-friendly paths
 - Unified JetBrainsMono Nerd Font based UI
 
-## Quick Start
+## Starting From Scratch
 
 ```bash
-# Clone
 git clone https://github.com/scubedoo187/term-config.git ~/term-config
+cd ~/term-config
 
-# Symlink configs
+./scripts/install-nix.sh        # Nix + flakes, symlinks, CLI packages
+./scripts/setup-macos.sh        # or setup-linux.sh: GUI, font, login shell
+./scripts/setup-git-filters.sh  # once per clone; see below
+./scripts/verify-config.sh
+```
+
+`install-nix.sh` handles everything portable. `setup-macos.sh` /
+`setup-linux.sh` cover only what cannot be shared: the Ghostty GUI, the Nerd
+Font, and registering Fish as the login shell.
+
+Optional, if this machine also carries the Claude Code / Codex / pi configs:
+
+```bash
+./scripts/migrate-home-configs.sh --apply
+./scripts/normalize-home-paths.sh --apply
+```
+
+### Without Nix
+
+```bash
+brew install --cask ghostty font-jetbrains-mono-nerd-font
+brew install fish starship tmux zoxide fzf ripgrep fd bat eza git
+
 ln -sfn ~/term-config/.config/ghostty ~/.config/ghostty
-ln -sfn ~/term-config/.config/wezterm ~/.config/wezterm
 ln -sfn ~/term-config/.config/fish ~/.config/fish
 ln -sfn ~/term-config/.config/tmux ~/.config/tmux
 ln -sf ~/term-config/.config/starship.toml ~/.config/starship.toml
-ln -sf ~/term-config/.config/wezterm/wezterm.lua ~/.wezterm.lua
-
-# Install (Nix)
-nix profile install .
-
-# Or install (Homebrew)
-brew install --cask ghostty wezterm
-brew install fish starship tmux zoxide fzf ripgrep fd bat eza git
 ```
 
 If Ghostty previously generated `~/Library/Application Support/com.mitchellh.ghostty/config`, remove it so the XDG dotfile remains the single source of truth.
@@ -40,7 +54,7 @@ If Ghostty previously generated `~/Library/Application Support/com.mitchellh.gho
 ## Session Model
 
 ```text
-Ghostty or WezTerm GUI
+Ghostty GUI
   -> Fish login shell
   -> auto-attach tmux session named "main"
   -> Starship/FZF/zoxide UX inside tmux
@@ -60,7 +74,7 @@ Use tmux for windows, panes, session persistence, and detach/attach behavior.
 |-----|--------|
 | `Cmd+Shift+C` | Copy |
 | `Cmd+Shift+V` | Paste |
-| `Alt+L` | WezTerm launcher |
+| `Cmd+Shift+M` | Toggle mouse reporting (native selection vs. Pi UI) |
 
 **Fish/FZF**
 
@@ -84,24 +98,12 @@ docs/ONPREM-DUCKDB.md
 ./scripts/verify-config.sh
 ```
 
-Legacy WezTerm mux cleanup tools remain for migration/recovery only:
-
-```bash
-./scripts/check-wezterm-mux-health.sh
-./scripts/cleanup-wezterm-state.sh
-```
-
 ## Structure
 
 ```text
 .config/
   ghostty/
     config              # Ghostty GUI/theme/TERM config
-  wezterm/
-    wezterm.lua          # Minimal WezTerm renderer config
-    modules/
-      appearance.lua
-      keybindings.lua
   fish/
     config.fish          # Shell config + GUI auto tmux attach
     conf.d/
@@ -179,7 +181,7 @@ unaffected — the trust blocks never reach a commit.
 
 ## Requirements
 
-- Ghostty or WezTerm
+- Ghostty
 - Fish
 - Starship
 - tmux

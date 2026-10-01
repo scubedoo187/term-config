@@ -18,12 +18,22 @@ tmux -L term-config-verify -f "$ROOT_DIR/.config/tmux/tmux.conf" new-session -d 
 tmux -L term-config-verify show-options -g extended-keys | grep -q '^extended-keys on$'
 tmux -L term-config-verify kill-server 2>/dev/null || true
 
-echo "[verify] wezterm config loads"
-wezterm --config-file "$ROOT_DIR/.config/wezterm/wezterm.lua" show-keys >/dev/null
+# The Ghostty CLI lives inside the .app bundle on macOS and is not on PATH by
+# default, so fall back to the bundled binary before skipping the check.
+ghostty_bin="$(command -v ghostty || true)"
+if [ -z "$ghostty_bin" ] && [ -x "/Applications/Ghostty.app/Contents/MacOS/ghostty" ]; then
+    ghostty_bin="/Applications/Ghostty.app/Contents/MacOS/ghostty"
+fi
 
-if command -v ghostty >/dev/null 2>&1; then
+if [ -n "$ghostty_bin" ]; then
     echo "[verify] ghostty config syntax"
-    ghostty +validate-config --config-file="$ROOT_DIR/.config/ghostty/config"
+    # Ghostty forks export GHOSTTY_RESOURCES_DIR into every shell they spawn.
+    # Inheriting it points theme lookup at the fork's bundle instead of the
+    # binary's own, which fails on any theme the fork does not ship.
+    env -u GHOSTTY_RESOURCES_DIR "$ghostty_bin" \
+        +validate-config --config-file="$ROOT_DIR/.config/ghostty/config"
+else
+    echo "[verify] ghostty not installed; skipping config check"
 fi
 
 # The filter commands live in local git config, which a clone does not carry,

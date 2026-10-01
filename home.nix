@@ -37,7 +37,6 @@ in
     stateVersion = "23.11";
 
     packages = with pkgs; [
-      wezterm
       fish
       starship
       
@@ -55,16 +54,12 @@ in
       neovim
       tmux
       
-      (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+      nerd-fonts.jetbrains-mono
     ];
 
     file = {
       ".config/ghostty" = {
         source = ./.config/ghostty;
-        recursive = true;
-      };
-      ".config/wezterm" = {
-        source = ./.config/wezterm;
         recursive = true;
       };
       ".config/fish" = {
@@ -90,40 +85,13 @@ in
     // (linkTree ./home/pi     "home/pi"     ".pi");
   };
 
+  # Deliberately no programs.fish or programs.starship here. Both generate their
+  # own config into the very paths home.file already links to this checkout, so
+  # enabling them either collides outright (.config/starship.toml) or shadows the
+  # tracked config.fish with a /nix/store copy that cannot be edited in place --
+  # and its init would then run every hook a second time. The packages come from
+  # home.packages above; the configuration comes from .config/.
   programs = {
-    fish = {
-      enable = true;
-      interactiveShellInit = ''
-        set -g fish_greeting
-        
-        if type -q direnv
-            direnv hook fish | source
-        end
-        
-        if type -q zoxide
-            zoxide init fish | source
-        end
-        
-        if type -q fzf
-            fzf --fish | source
-        end
-        
-        if type -q starship
-            starship init fish | source
-        end
-      '';
-      functions = {
-        nix-shell = "command nix-shell --run fish $argv";
-        mkcd = "mkdir -p $argv[1] && cd $argv[1]";
-      };
-    };
-
-    starship = {
-      enable = true;
-      enableFishIntegration = false;
-      settings = builtins.fromTOML (builtins.readFile ./.config/starship.toml);
-    };
-
     zoxide = {
       enable = true;
       enableFishIntegration = false;
@@ -136,7 +104,7 @@ in
 
     git = {
       enable = true;
-      extraConfig = {
+      settings = {
         core.editor = "nvim";
         init.defaultBranch = "main";
       };
