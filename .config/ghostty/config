@@ -8,7 +8,7 @@ command = /opt/homebrew/bin/fish --login --interactive
 term = xterm-256color
 
 font-family = JetBrainsMono Nerd Font Mono
-font-size = 14
+font-size = 15
 font-style = bold
 
 window-padding-x = 0
