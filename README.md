@@ -92,6 +92,27 @@ Optional private Pi integration for read-only onprem DuckDB/dlk EDA is documente
 docs/ONPREM-DUCKDB.md
 ```
 
+## Headroom (macOS)
+
+Plain `claude` in fish goes through one shared [Headroom](https://github.com/headroomlabs-ai/headroom)
+stack via `HTTPS_PROXY`, so it still works with Remote Control (which rejects a
+custom `ANTHROPIC_BASE_URL`). Three launchd agents serve every session:
+
+| Port | Agent | Role |
+|---|---|---|
+| 8787 | `com.headroom.proxy` | Headroom compression proxy |
+| 8788 | `com.headroom.mcp` | Headroom MCP (Streamable HTTP) for Claude and Codex |
+| 8789 | `com.headroom.mitm` | mitmproxy: decrypts only api.anthropic.com, sends `/v1/messages` to :8787 |
+
+```bash
+./scripts/headroom/setup.sh              # install / repair (idempotent)
+./scripts/headroom/setup.sh --uninstall  # remove agents and the Claude MCP entry
+HEADROOM_OFF=1 claude                    # bypass for one run
+```
+
+Requires `headroom`, `uv` and `claude` on PATH; mitmproxy is installed by the
+script. Logs go to `~/.headroom/logs/launchd-*.log`.
+
 ## Maintenance
 
 ```bash
