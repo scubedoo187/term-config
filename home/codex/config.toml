@@ -169,8 +169,8 @@ max_lines = 220 # Maps from "maxLines": 220
 
 # --- Headroom MCP server ---
 [mcp_servers.headroom]
-command = "/Users/yg_jung/.local/bin/headroom"
-args = ["mcp", "serve"]
+# Shared instance run by launchd (term-config/scripts/headroom), not one per session.
+url = "http://127.0.0.1:8788/mcp"
 # --- end Headroom MCP server ---
 
 # --- Headroom MCP server: serena ---
